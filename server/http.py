@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, abort
 
 app = Flask(__name__)
 
@@ -6,19 +6,16 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello, World!"
+    return "MADLAB - WIP"
 
 @app.route('/job', method='POST')
 def create_job():
-    try:
         data = request.get_json()
         if data is None:
             abort(500)
         app = data.get('app', None)
         inputFile = data.get('input', None)
         params = data.get('params', None)
-    except Exception as e:
-        abort(500)
     return "Hello, World!"
     #return {id, status, metadata, app, input, params, result, logs{stdout, stderr}}
 
