@@ -11,4 +11,13 @@ MADLAB is a SaaS (Software as a Service) platform provided by LHS.
 ``` 
 
 
+## Setup 
+
+```	
+   python setup.py bdist
+   python3 setup.py sdist
+   twine upload dist/*
+```
+
+
 	

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-import allgo
+import madlab
 
 setup(
     name='madlab',
