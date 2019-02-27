@@ -1,10 +1,23 @@
-Malware Analysis Detection LABoratory 
-=====================================
+# MADLAB python library 
 
 
-Coding style guide : 
---------------------
+## Description
+MADLAB is a SaaS (Software as a Service) platform provided by LHS. 
 
-- python3
-- pep8 
- 
+## Install 
+
+``` 
+  pip install madlab
+``` 
+
+
+## Setup 
+
+```	
+   python setup.py bdist
+   python3 setup.py sdist
+   twine upload dist/*
+```
+
+
+	
