@@ -1,6 +1,4 @@
 import logging
-import os
-import time
 
 try:
     from urllib.parse import urlparse, urlencode
@@ -10,15 +8,17 @@ except ImportError:
     from urlparse import urlparse
     from urllib import urlencode
     from urllib2 import urlopen, Request, HTTPError
-import requests
 
 log = logging.getLogger('madlab')
 __version__ = '0.0.1'
 
 
 class Job:
-    def __init__(self, id, mongourl=None):
+    def __init__(self, id, input, params, mongourl=None):
+        self.log = logging.getLogger("Job:%s" % id)
         self.id = id
+        self.input = input
+        self.params = params
         if mongourl:
             self.load()
         self.mongo_url = mongourl
@@ -29,13 +29,17 @@ class Job:
         self.current_status = s
         self.save()
 
-    def logs(self, l):
-        self.logs.append(l)
-        self.save()
+    def logs(self, container):
+        print(container.logs())
+
+        for l in container.logs(stream=True):
+            self.log.debug("log received %s", l)
+            self.logs.append(l)
+            self.save()
 
     def save(self):
         if self.mongo_url:
             print("TODO")
 
-   def load(self):
+    def load(self):
         print("TODO")
