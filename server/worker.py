@@ -1,10 +1,8 @@
+import logging
 import docker
-
 import conf
 
 dockers = [docker.DockerClient(base_url=h) for h in conf.docker_hosts]
-
-import logging
 
 
 class Test:
