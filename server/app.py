@@ -10,12 +10,12 @@ def index():
 
 @app.route('/job', method='POST')
 def create_job():
-        data = request.get_json()
-        if data is None:
-            abort(500)
-        app = data.get('app', None)
-        inputFile = data.get('input', None)
-        params = data.get('params', None)
+    data = request.get_json()
+    if data is None:
+        abort(500)
+    app = data.get('app', None)
+    inputFile = data.get('input', None)
+    params = data.get('params', None)
     return "Hello, World!"
     #return {id, status, metadata, app, input, params, result, logs{stdout, stderr}}
 
