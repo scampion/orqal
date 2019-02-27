@@ -17,7 +17,25 @@ __version__ = '0.0.1'
 
 
 class Job:
-    def __init__(self):
+    def __init__(self, id, mongourl=None):
+        self.id = id
+        if mongourl:
+            self.load()
+        self.mongo_url = mongourl
+        self.current_status = None
+        self.logs = []
 
+    def status(self, s):
+        self.current_status = s
+        self.save()
 
+    def logs(self, l):
+        self.logs.append(l)
+        self.save()
 
+    def save(self):
+        if self.mongo_url:
+            print("TODO")
+
+   def load(self):
+        print("TODO")
