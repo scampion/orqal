@@ -34,6 +34,7 @@ class Job:
         if self._id:
             self.load()
         else:
+            log.info("Create job for app %s input %s", app, input)
             self.create()
 
     def status(self, s):
@@ -57,7 +58,7 @@ class Job:
         self.load()
 
     def __str__(self):
-        return str((self._id, self.app, self.input, self.current_status))
+        return "Job <%s | %s | %s | %s>" % (self._id, self.app, self.input, self.current_status)
 
 
 if __name__ == '__main__':

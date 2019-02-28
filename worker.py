@@ -1,6 +1,7 @@
 import inspect
 import logging
 import sys
+import threading
 import time
 
 import docker
@@ -14,8 +15,8 @@ client = MongoClient(conf.mongourl)
 dockers = [docker.DockerClient(base_url=h) for h in conf.docker_hosts]
 logging.basicConfig(level=logging.DEBUG)
 
-
 log = logging.getLogger('madlab')
+
 
 class Job(madlab.Job):
 
@@ -36,7 +37,7 @@ class Job(madlab.Job):
         self.parse_logs(c.logs())
 
     def save(self):
-        d  = self.__dict__.copy()
+        d = self.__dict__.copy()
         del d['container']
         client.madlab.jobs.replace_one({'_id': self._id}, d)
 
@@ -45,7 +46,8 @@ class Job(madlab.Job):
         self.save()
 
     def load(self):
-        pass
+        data = client.madlab.jobs.find_one({'_id': self._id})
+        self.__dict__.update(data)
 
 
 class AbstractWorker:
@@ -89,20 +91,24 @@ class SCDG_Extraction(AbstractWorker):
         job.set_result("My results")
 
 
-if __name__ == '__main__':
-    # input = None
-    # params = {"app": {'echo': 'test', 'time': 10, 'exit_code': 2}}
-    # params = {"app": {}}
-    # j = Job(0, input, params)
-    # SCDG_Extraction(j).run(dockers[0])
+def worker(j):
+    log.info("Thread start : %s", j)
+    for name, obj in inspect.getmembers(sys.modules[__name__]):
 
+        if name != 'Job' and name == j.app and inspect.isclass(obj):
+            log.info("Run %s %s", name, obj)
+            obj(j).run(dockers[0])
+    log.info("Thread stop : %s", j)
+
+
+if __name__ == '__main__':
+    threads = []
     while True:
         for r in client.madlab.jobs.find({'current_status': None}):
-            j = Job()
-            j.__dict__.update(r)
-
-            for name, obj in inspect.getmembers(sys.modules[__name__]):
-                if name != 'Job' and name == j.app and inspect.isclass(obj):
-                    print(j)
-                    obj(j).run(dockers[0])
-        time.sleep(5)
+            j = Job(r['_id'])
+            j.status('init')
+            t = threading.Thread(target=worker, args=(j,))
+            threads.append(t)
+            t.start()
+        if len(threads) > conf.max_threads:
+            time.sleep(5)
