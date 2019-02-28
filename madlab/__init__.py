@@ -56,6 +56,9 @@ class Job:
         assert self._id, "Cannot create job"
         self.load()
 
+    def __str__(self):
+        return str((self._id, self.app, self.input, self.current_status))
+
 
 if __name__ == '__main__':
     j = Job(app="Test", input=None, params={"app": {'echo': 'test', 'time': 10, 'exit_code': 2}})

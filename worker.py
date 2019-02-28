@@ -15,12 +15,14 @@ dockers = [docker.DockerClient(base_url=h) for h in conf.docker_hosts]
 logging.basicConfig(level=logging.DEBUG)
 
 
+log = logging.getLogger('madlab')
+
 class Job(madlab.Job):
 
     def parse_logs(self, logs):
         print(logs)
         for l in logs.decode('utf8').split('\n'):
-            self.log.debug("job id %s - %s", self.id, l)
+            log.debug("job id %s - %s", self._id, l)
             self.logs.append(l)
             self.save()
 
@@ -34,7 +36,9 @@ class Job(madlab.Job):
         self.parse_logs(c.logs())
 
     def save(self):
-        client.madlab.jobs.update_one(self.__dict__)
+        d  = self.__dict__.copy()
+        del d['container']
+        client.madlab.jobs.replace_one({'_id': self._id}, d)
 
     def set_result(self, data):
         self.result = data
@@ -98,4 +102,6 @@ if __name__ == '__main__':
 
         for name, obj in inspect.getmembers(sys.modules[__name__]):
             if name != 'Job' and name == j.app and inspect.isclass(obj):
+                print(j)
                 obj(j).run(dockers[0])
+
