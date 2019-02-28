@@ -1,6 +1,7 @@
 import inspect
 import logging
 import sys
+import threading
 import time
 
 import docker
@@ -14,13 +15,15 @@ client = MongoClient(conf.mongourl)
 dockers = [docker.DockerClient(base_url=h) for h in conf.docker_hosts]
 logging.basicConfig(level=logging.DEBUG)
 
+log = logging.getLogger('madlab')
+
 
 class Job(madlab.Job):
 
     def parse_logs(self, logs):
         print(logs)
         for l in logs.decode('utf8').split('\n'):
-            self.log.debug("job id %s - %s", self.id, l)
+            log.debug("job id %s - %s", self._id, l)
             self.logs.append(l)
             self.save()
 
@@ -34,14 +37,17 @@ class Job(madlab.Job):
         self.parse_logs(c.logs())
 
     def save(self):
-        client.madlab.jobs.update_one(self.__dict__)
+        d = self.__dict__.copy()
+        del d['container']
+        client.madlab.jobs.replace_one({'_id': self._id}, d)
 
     def set_result(self, data):
         self.result = data
         self.save()
 
     def load(self):
-        pass
+        data = client.madlab.jobs.find_one({'_id': self._id})
+        self.__dict__.update(data)
 
 
 class AbstractWorker:
@@ -110,3 +116,24 @@ if __name__ == '__main__':
         for name, obj in inspect.getmembers(sys.modules[__name__]):
             if name != 'Job' and name == j.app and inspect.isclass(obj):
                 obj(j).run(dockers[0])
+def worker(j):
+    log.info("Thread start : %s", j)
+    for name, obj in inspect.getmembers(sys.modules[__name__]):
+
+        if name != 'Job' and name == j.app and inspect.isclass(obj):
+            log.info("Run %s %s", name, obj)
+            obj(j).run(dockers[0])
+    log.info("Thread stop : %s", j)
+
+
+if __name__ == '__main__':
+    threads = []
+    while True:
+        for r in client.madlab.jobs.find({'current_status': None}):
+            j = Job(r['_id'])
+            j.status('init')
+            t = threading.Thread(target=worker, args=(j,))
+            threads.append(t)
+            t.start()
+        if len(threads) > conf.max_threads:
+            time.sleep(5)
