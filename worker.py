@@ -1,4 +1,6 @@
+import inspect
 import logging
+import sys
 import time
 
 import docker
@@ -38,6 +40,9 @@ class Job(madlab.Job):
         self.result = data
         self.save()
 
+    def load(self):
+        pass
+
 
 class AbstractWorker:
     docker_url = None
@@ -65,7 +70,7 @@ class Test(AbstractWorker):
         return "python3 simple_job.py %s %s %s" % (params['echo'], params['time'], params['exit_code'])
 
     def set_result(self, job):
-        job.result("My results")
+        job.set_result("My results")
 
 
 class SCDG_Extraction(AbstractWorker):
@@ -77,12 +82,20 @@ class SCDG_Extraction(AbstractWorker):
         return "python trace_calls.py /code/tests/binaries/pe/32/helloword.exe"
 
     def set_result(self, job):
-        job.result("My results")
+        job.set_result("My results")
 
 
 if __name__ == '__main__':
-    input = None
-    params = {"app": {'echo': 'test', 'time': 10, 'exit_code': 2}}
-    params = {"app": {}}
-    j = Job(0, input, params)
-    SCDG_Extraction(j).run(dockers[0])
+    # input = None
+    # params = {"app": {'echo': 'test', 'time': 10, 'exit_code': 2}}
+    # params = {"app": {}}
+    # j = Job(0, input, params)
+    # SCDG_Extraction(j).run(dockers[0])
+
+    for r in client.madlab.jobs.find({'current_status': None}):
+        j = Job()
+        j.__dict__.update(r)
+
+        for name, obj in inspect.getmembers(sys.modules[__name__]):
+            if name != 'Job'  and name == j.app and inspect.isclass(obj):
+                obj(j).run(dockers[0])

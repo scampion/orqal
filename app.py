@@ -16,21 +16,19 @@ def index():
 
 @app.route('/job', methods=['POST'])
 def create_job():
-    data = request.get_json()
+    data = request.get_json(force=True)
     if data is None:
         abort(500)
-    app = data.get('app', None)
-    input_file = data.get('input', None)
-    params = data.get('params', None)
-    _id = mongo.db.jobs.insert(
-        {'app': app, 'input': input_file, 'params': params})
+    del data['_id']
+    _id = mongo.db.jobs.insert(data)
     return str(_id)
 
 
 @app.route('/job/<id>')
 def get_job(id):
-    return dumps(mongo.db.jobs.find_one_or_404({'_id': ObjectId(id)}))
-
+    data = mongo.db.jobs.find_one_or_404({'_id': ObjectId(id)})
+    data['_id'] = id
+    return dumps(data)
 
 @app.route('/jobs/status', methods=['POST'])
 def get_jobs_status():
@@ -45,4 +43,4 @@ def get_jobs_status():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
