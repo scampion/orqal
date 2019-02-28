@@ -1,15 +1,42 @@
 import logging
 import time
-from multiprocessing import Process
 
 import docker
 import conf
+import madlab
 
-from madlab import Job
+from pymongo import MongoClient
+
+client = MongoClient(conf.mongourl)
 
 dockers = [docker.DockerClient(base_url=h) for h in conf.docker_hosts]
-
 logging.basicConfig(level=logging.DEBUG)
+
+
+class Job(madlab.Job):
+
+    def parse_logs(self, logs):
+        print(logs)
+        for l in logs.decode('utf8').split('\n'):
+            self.log.debug("job id %s - %s", self.id, l)
+            self.logs.append(l)
+            self.save()
+
+    def run(self, c):
+        self.container = c
+        while c.status in ["running", "created"]:
+            self.status(c.status)
+            time.sleep(1)
+            c.reload()
+        self.status(c.status)
+        self.parse_logs(c.logs())
+
+    def save(self):
+        client.madlab.jobs.update_one(self.__dict__)
+
+    def set_result(self, data):
+        self.result = data
+        self.save()
 
 
 class AbstractWorker:
@@ -43,9 +70,6 @@ class Test(AbstractWorker):
 
 
 class SCDG_Extraction(AbstractWorker):
-    """
-    Wrapper for SCDG Extraction
-    """
     docker_url = "registry.gitlab.inria.fr/scampion/madlab/scdg/trace_gridfs"
     volumes = {'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},
                '/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}
