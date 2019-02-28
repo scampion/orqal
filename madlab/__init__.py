@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def wait(jobs):
-    while not all([j.current_status == 'finish' for j in jobs]):
+    while not all([j.current_status == 'exited' for j in jobs]):
         for j in jobs:
             j.load()
         time.sleep(5)

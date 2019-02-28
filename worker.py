@@ -7,6 +7,7 @@ import time
 import docker
 import conf
 import madlab
+import wrapper
 
 from pymongo import MongoClient
 
