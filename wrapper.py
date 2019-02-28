@@ -46,7 +46,7 @@ class SCDG_Extraction(AbstractWorker):
 
 
 class VirusTotal(AbstractWorker):
-    docker_url = "malice/virustotal"
+    docker_url = "registry.gitlab.inria.fr/scampion/madlab/virustotal"
 
     def get_cmd(self, params):
         api_key  = "665a6fda794f671b77720b314944f2409429e9d9b6f62b0bdaa003fa94126ec1"
