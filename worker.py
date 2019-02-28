@@ -63,8 +63,7 @@ def worker(j):
 if __name__ == '__main__':
     threads = []
     while True:
-        # for r in client.madlab.jobs.find({'current_status': None}):
-        for r in client.madlab.jobs.find({'current_status': 'init'}):
+        for r in client.madlab.jobs.find({'current_status': None}):
             j = Job(r['_id'])
             j.status('init')
             t = threading.Thread(target=worker, args=(j,))
