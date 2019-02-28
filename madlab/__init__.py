@@ -14,6 +14,7 @@ log = logging.getLogger('madlab')
 __version__ = '0.0.1'
 
 
+
 class Job:
     def __init__(self, id, input, params, mongourl=None):
         self.container = None
