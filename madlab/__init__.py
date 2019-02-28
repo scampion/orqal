@@ -27,11 +27,9 @@ class Job:
         self.current_status = s
         self.save()
 
-
     def save(self):
         if self.mongo_url:
             print("TODO")
 
     def load(self):
         print("TODO")
-

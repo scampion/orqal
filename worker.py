@@ -52,11 +52,10 @@ class AbstractWorker:
         client.images.pull(self.docker_url, tag, auth_config=conf.auth_config)
 
         self.job.run(client.containers.run(self.docker_url + ':' + tag,
-                                           self.get_cmd(self.jobs.params['app']),
+                                           self.get_cmd(self.job.params['app']),
                                            volumes=self.volumes,
                                            detach=True, auto_remove=conf.auto_remove))
-        self.set_results(self.job)
-        print(self, self.job.logs)
+        self.set_result(self.job)
 
 
 class Test(AbstractWorker):
@@ -66,23 +65,24 @@ class Test(AbstractWorker):
         return "python3 simple_job.py %s %s %s" % (params['echo'], params['time'], params['exit_code'])
 
     def set_result(self, job):
-        job.results("My results")
+        job.result("My results")
 
 
 class SCDG_Extraction(AbstractWorker):
     docker_url = "registry.gitlab.inria.fr/scampion/madlab/scdg/trace_gridfs"
-    volumes = {'/home/user1/': {'bind': '/mnt/vol2', 'mode': 'rw'},
-               '/var/www': {'bind': '/mnt/vol1', 'mode': 'ro'}}
+    volumes = {'/scratch': {'bind': '/scratch', 'mode': 'rw'},
+               '/database': {'bind': '/database', 'mode': 'ro'}}
 
     def get_cmd(self, params):
-        return "python src/trace_calls.py tests/binaries/pe/32/helloword.exe"
+        return "python trace_calls.py /code/tests/binaries/pe/32/helloword.exe"
 
     def set_result(self, job):
-        job.results("My results")
+        job.result("My results")
 
 
 if __name__ == '__main__':
     input = None
     params = {"app": {'echo': 'test', 'time': 10, 'exit_code': 2}}
+    params = {"app": {}}
     j = Job(0, input, params)
-    Test(j).run(dockers[0])
+    SCDG_Extraction(j).run(dockers[0])
