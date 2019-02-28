@@ -30,6 +30,7 @@ def get_job(id):
     data['_id'] = id
     return dumps(data)
 
+
 @app.route('/jobs/status', methods=['POST'])
 def get_jobs_status():
     data = request.get_json()

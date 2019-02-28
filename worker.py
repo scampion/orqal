@@ -97,5 +97,5 @@ if __name__ == '__main__':
         j.__dict__.update(r)
 
         for name, obj in inspect.getmembers(sys.modules[__name__]):
-            if name != 'Job'  and name == j.app and inspect.isclass(obj):
+            if name != 'Job' and name == j.app and inspect.isclass(obj):
                 obj(j).run(dockers[0])
