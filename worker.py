@@ -8,7 +8,6 @@ import docker
 import conf
 import madlab
 
-from wrapper import Test, SCDG_Extraction
 from pymongo import MongoClient
 
 client = MongoClient(conf.mongourl)
@@ -53,8 +52,7 @@ class Job(madlab.Job):
 
 def worker(j):
     log.info("Thread start : %s", j)
-    for name, obj in inspect.getmembers(sys.modules[__name__]):
-
+    for name, obj in inspect.getmembers("wrapper"):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             log.info("Run %s %s", name, obj)
             obj(j).run(dockers[0])
