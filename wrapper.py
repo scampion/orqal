@@ -1,3 +1,4 @@
+import json
 import logging
 
 import conf
@@ -42,3 +43,14 @@ class SCDG_Extraction(AbstractWorker):
 
     def set_result(self, job):
         job.set_result("My results")
+
+
+class VirusTotal(AbstractWorker):
+    docker_url = "malice/virustotal"
+
+    def get_cmd(self, params):
+        api_key  = "665a6fda794f671b77720b314944f2409429e9d9b6f62b0bdaa003fa94126ec1"
+        return "virustotal --api %s lookup %s" % (api_key, params['sha1'])
+
+    def set_result(self, job):
+        job.set_result(json.dumps(job.logs))

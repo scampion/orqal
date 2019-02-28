@@ -52,7 +52,7 @@ class Job(madlab.Job):
 
 def worker(j):
     log.info("Thread start : %s", j)
-    for name, obj in inspect.getmembers("wrapper"):
+    for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             log.info("Run %s %s", name, obj)
             obj(j).run(dockers[0])
