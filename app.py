@@ -1,4 +1,4 @@
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from bson.json_util import dumps
@@ -29,12 +29,11 @@ def get_job(id):
 
 @app.route('/jobs/status', methods=['POST'])
 def get_jobs_status():
-    try:
-        data = request.get_json()
-    except Exception as e:
+    data = request.get_json()
+    if data is None:
         abort(500)
-    return "Hello, World!"
-    #return {finish:[], error:[],submitted}
+    jobs = mongo.db.jobs.aggregate([{'$group' : {'_id':{'source':'$status'}, 'count':{'$sum':1}}} ])
+    return dumps(jobs)
 
 if __name__ == '__main__':
     app.run()
