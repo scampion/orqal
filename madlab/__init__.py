@@ -33,7 +33,6 @@ class Job:
         self.save()
 
     def parse_logs(self, logs):
-        print(logs)
         for l in logs.decode('utf8').split('\n'):
             self.log.debug("job id %s - %s", self.id, l)
             self.logs.append(l)
@@ -55,5 +54,5 @@ class Job:
     def load(self):
         print("TODO")
 
-    def results(self, data):
+    def result(self, data):
         print(data) # save results #FIXME
