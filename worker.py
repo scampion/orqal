@@ -96,12 +96,13 @@ if __name__ == '__main__':
     # j = Job(0, input, params)
     # SCDG_Extraction(j).run(dockers[0])
 
-    for r in client.madlab.jobs.find({'current_status': None}):
-        j = Job()
-        j.__dict__.update(r)
+    while True:
+        for r in client.madlab.jobs.find({'current_status': None}):
+            j = Job()
+            j.__dict__.update(r)
 
-        for name, obj in inspect.getmembers(sys.modules[__name__]):
-            if name != 'Job' and name == j.app and inspect.isclass(obj):
-                print(j)
-                obj(j).run(dockers[0])
-
+            for name, obj in inspect.getmembers(sys.modules[__name__]):
+                if name != 'Job' and name == j.app and inspect.isclass(obj):
+                    print(j)
+                    obj(j).run(dockers[0])
+        time.sleep(5)
