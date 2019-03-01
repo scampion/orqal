@@ -1,3 +1,5 @@
+import json
+
 from flask import Flask, request, abort, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
@@ -9,9 +11,9 @@ mongo = PyMongo(app)
 
 
 @app.route('/')
-@app.route('/index')
 def index():
-    return "MADLAB - WIP"
+    with open('status.json') as s:
+        return s.read()
 
 
 @app.route('/job', methods=['POST'])

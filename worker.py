@@ -5,6 +5,8 @@ import threading
 import time
 
 import docker
+import json
+
 import conf
 import madlab
 import wrapper
@@ -60,14 +62,22 @@ def worker(j):
     log.info("Thread stop : %s", j)
 
 
+def status(tds):
+    with open('status.json', 'w') as s:
+        json.dump({"threads": tds}, s)
+        # json.dump({"threads": {id: t.name for id, t in tds.items()}}, s)
+
+
 if __name__ == '__main__':
-    threads = []
+    threads = {}
     while True:
+        status(threads)
         for r in client.madlab.jobs.find({'current_status': None}):
-            j = Job(r['_id'])
+            id_ = r['_id']
+            j = Job(id_)
             j.status('init')
             t = threading.Thread(target=worker, args=(j,))
-            threads.append(t)
+            threads[id_] = t
             t.start()
         if len(threads) > conf.max_threads:
             time.sleep(5)
