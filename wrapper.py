@@ -24,6 +24,15 @@ class AbstractWorker:
         self.set_result(self.job)
 
 
+class TestProd(AbstractWorker):
+    docker_url = "madlab:5000/test_module"
+
+    def get_cmd(self, params):
+        return "python3 simple_job.py %s %s %s" % (params['echo'], params['time'], params['exit_code'])
+
+    def set_result(self, job):
+        job.set_result("My results")
+
 class Test(AbstractWorker):
     docker_url = "registry.gitlab.inria.fr/scampion/madlab/test_module"
 

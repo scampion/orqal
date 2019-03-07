@@ -1,3 +1,10 @@
+"""
+Malware Analysis Detection Laboratory
+
+This server scan job order and run it on our cluster (21 nodes, 16TB)
+
+Stay tuned with the mailing list : madlab@inria.fr
+"""
 import inspect
 import logging
 import sys
@@ -64,12 +71,16 @@ def worker(j):
 
 def status(tds):
     with open('status.json', 'w') as s:
-        json.dump({"threads": tds}, s)
+        json.dump({"doc": __doc__,
+                   "hosts": conf.docker_hosts,
+                   "threads": tds}
+                  , s)
         # json.dump({"threads": {id: t.name for id, t in tds.items()}}, s)
 
 
 if __name__ == '__main__':
     threads = {}
+    status(threads)
     while True:
         status(threads)
         for r in client.madlab.jobs.find({'current_status': None}):
