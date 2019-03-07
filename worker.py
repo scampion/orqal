@@ -66,7 +66,11 @@ def worker(j):
     for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             log.info("Run %s %s", name, obj)
-            obj(j).run(dockers[0])
+            try:
+                obj(j).run(dockers[0])
+            except Exception as e:
+                j.logs.append(str(e))
+                j.status("error")
     log.info("Thread stop : %s", j)
 
 
