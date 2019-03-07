@@ -1,6 +1,5 @@
 mongourl = "mongodb://localhost/madlab"
-docker_hosts = ['192.168.100.1:2376']
-docker_api_version = '1.22'
+docker_hosts = ['unix://var/run/docker.sock']
 auth_config = {'username': 'scampion',
                'password': '65sX2-9sSXSp-hs-XeZ8'}
 auto_remove = False

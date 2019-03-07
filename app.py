@@ -13,7 +13,12 @@ mongo = PyMongo(app)
 @app.route('/')
 def index():
     with open('status.json') as s:
-        return s.read()
+        response = app.response_class(
+            response=s.read(),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
 
 
 @app.route('/job', methods=['POST'])

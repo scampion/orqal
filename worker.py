@@ -22,8 +22,9 @@ from pymongo import MongoClient
 
 client = MongoClient(conf.mongourl)
 
-dockers = [docker.DockerClient(base_url=h) for h in conf.docker_hosts]
+dockers = [docker.DockerClient(base_url=h, version=conf.docker_api_version) for h in conf.docker_hosts]
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("requests").setLevel(logging.WARNING)
 
 log = logging.getLogger('madlab')
 
@@ -69,20 +70,25 @@ def worker(j):
     log.info("Thread stop : %s", j)
 
 
+def containers():
+    for d in dockers:
+        yield {d.info()['Name']: [(c.id, c.image, c.status) for c in d.containers.list()]}
+
+
 def status(tds):
     with open('status.json', 'w') as s:
-        json.dump({"doc": __doc__,
+        json.dump({"_doc": __doc__,
                    "hosts": conf.docker_hosts,
+                   "nodes": [d.info() for d in dockers],
+                   "containers": [c for c in containers()],
                    "threads": tds}
-                  , s)
-        # json.dump({"threads": {id: t.name for id, t in tds.items()}}, s)
+                  , s, indent=4, sort_keys=True)
 
 
-if __name__ == '__main__':
+def main():
     threads = {}
     status(threads)
     while True:
-        status(threads)
         for r in client.madlab.jobs.find({'current_status': None}):
             id_ = r['_id']
             j = Job(id_)
@@ -92,3 +98,9 @@ if __name__ == '__main__':
             t.start()
         if len(threads) > conf.max_threads:
             time.sleep(5)
+        status(threads)
+        time.sleep(5)
+
+
+if __name__ == '__main__':
+    main()
