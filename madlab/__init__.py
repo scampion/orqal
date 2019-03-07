@@ -8,7 +8,7 @@ import requests
 log = logging.getLogger('madlab')
 __version__ = '0.0.1'
 
-MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://localhost:5000")
+MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
 
 logging.basicConfig(level=logging.DEBUG)
 

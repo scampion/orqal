@@ -19,7 +19,9 @@ MADLAB is a SaaS (Software as a Service) platform provided by LHS.
    twine upload dist/*
 ```
 
+## Dev environmenmt
 
+    MADLAB_HOST="http://localhost:5000"
 	
 
 ## On docker node :
