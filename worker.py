@@ -5,6 +5,7 @@ This server scan job order and run it on our cluster (21 nodes, 16TB)
 
 Stay tuned with the mailing list : madlab@inria.fr
 """
+import datetime
 import inspect
 import logging
 import sys
@@ -82,11 +83,12 @@ def containers():
 def status(tds):
     with open('status.json', 'w') as s:
         json.dump({"_doc": __doc__,
+                   "_last_update":  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                    "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
                    "hosts": conf.docker_hosts,
                    "nodes": [d.info() for d in dockers],
                    "containers": [c for c in containers()],
-                   "threads": {str(j): str(t) for j, t in tds.items()},
+                   "threads": {str(j): t.getName() for j, t in tds.items()},
                    }, s, indent=4, sort_keys=True)
 
 

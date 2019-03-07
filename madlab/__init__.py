@@ -5,13 +5,18 @@ import time
 
 import requests
 
-logging.getLogger("requests").setLevel(logging.WARNING)
-log = logging.getLogger('madlab')
-__version__ = '0.0.1'
 
+__version__ = '0.0.2'
 MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
 
-logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("requests").setLevel(logging.WARNING)
+log = logging.getLogger('madlab')
+log.setLevel(logging.DEBUG)
+
+try:
+    services = requests.get(MADLAB_HOST).json()['_services']
+except Exception as e:
+    log.error(str(e))
 
 
 def wait(jobs):
@@ -63,6 +68,8 @@ class Job:
     def __repr__(self):
         r = "Job %s | app: %s | input: %s | status: %s" % (self._id, self.app, self.input, self.current_status)
         if len(self.logs):
+            r += "\nlogs :\n"
+            r += "-"*80 + '\n'
             r += "\n".join(self.logs)
         return r
 
