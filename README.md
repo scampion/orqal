@@ -30,7 +30,8 @@ Add in file `/etc/systemd/system/docker.service.d/override.conf`
 
     [Service]
     ExecStart=
-    ExecStart=/usr/bin/docker daemon -H fd://  -H tcp://0.0.0.0:2376 -s overlay
+    ExecStart=/usr/bin/docker daemon -H fd://  -H tcp://0.0.0.0:2376 -s overlay --insecure-registry madlab:5000
+    
 
 Then flush changes by executing :
     
