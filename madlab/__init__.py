@@ -5,6 +5,7 @@ import time
 
 import requests
 
+logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('madlab')
 __version__ = '0.0.1'
 
@@ -50,7 +51,6 @@ class Job:
 
     def create(self):
         url = MADLAB_HOST + "/job"
-        # self.__dict__.pop('_id')
         r = requests.post(url, data=json.dumps(self.__dict__))
         r.raise_for_status()
         self._id = r.content.decode('utf8')
@@ -59,6 +59,12 @@ class Job:
 
     def __str__(self):
         return "Job <%s | %s | %s | %s>" % (self._id, self.app, self.input, self.current_status)
+
+    def __repr__(self):
+        r = "Job %s | app: %s | input: %s | status: %s" % (self._id, self.app, self.input, self.current_status)
+        if len(self.logs):
+            r += "\n".join(self.logs)
+        return r
 
 
 if __name__ == '__main__':

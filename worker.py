@@ -23,8 +23,8 @@ from pymongo import MongoClient
 client = MongoClient(conf.mongourl)
 
 dockers = [docker.DockerClient(base_url=h, version=conf.docker_api_version) for h in conf.docker_hosts]
-logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("requests").setLevel(logging.WARNING)
+logging.basicConfig(level=logging.DEBUG)
 
 log = logging.getLogger('madlab')
 
@@ -81,10 +81,9 @@ def status(tds):
                    "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
                    "hosts": conf.docker_hosts,
                    "nodes": [d.info() for d in dockers],
-
                    "containers": [c for c in containers()],
-                   "threads": tds}
-                  , s, indent=4, sort_keys=True)
+                   "threads": {str(j): str(t) for j, t in tds.items()},
+                   }, s, indent=4, sort_keys=True)
 
 
 def main():
