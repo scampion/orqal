@@ -11,6 +11,7 @@ import logging
 import sys
 import threading
 import time
+import traceback
 
 import docker
 import json
@@ -32,11 +33,16 @@ log = logging.getLogger('madlab')
 
 class Job(madlab.Job):
 
-    def parse_logs(self, logs):
-        print(logs)
-        for l in logs.decode('utf8').split('\n'):
-            log.debug("job id %s - %s", self._id, l)
-            self.logs.append(l)
+    def parse_logs(self, c):
+        stdout = c.logs(stdout=True, stderr=False)
+        for l in stdout.decode('utf8').split('\n'):
+            log.debug("job id stdout %s - %s", self._id, l)
+            self.stdout.append(l)
+
+        stderr = c.logs(stdout=False, stderr=True)
+        for l in stderr.decode('utf8').split('\n'):
+            log.debug("job id stderr %s - %s", self._id, l)
+            self.stderr.append(l)
             self.save()
 
     def run(self, c):
@@ -46,11 +52,12 @@ class Job(madlab.Job):
             time.sleep(1)
             c.reload()
         self.status(c.status)
-        self.parse_logs(c.logs())
+        self.parse_logs(c)
 
     def save(self):
         d = self.__dict__.copy()
         del d['container']
+        log.debug(d)
         client.madlab.jobs.replace_one({'_id': self._id}, d)
 
     def set_result(self, data):
@@ -70,7 +77,8 @@ def worker(j):
             try:
                 obj(j).run(dockers[0])
             except Exception as e:
-                j.logs.append(str(e))
+                traceback.print_exc(file=sys.stdout)
+                j.stderr.append(str(e))
                 j.status("error")
     log.info("Thread stop : %s", j)
 

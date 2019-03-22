@@ -35,7 +35,8 @@ class Job:
         self.params = params
         self.current_status = None
         self.container = None
-        self.logs = []
+        self.stdout = []
+        self.stderr = []
         self.result = None
         if self._id:
             self.load()
@@ -67,10 +68,10 @@ class Job:
 
     def __repr__(self):
         r = "Job %s | app: %s | input: %s | status: %s" % (self._id, self.app, self.input, self.current_status)
-        if len(self.logs):
-            r += "\nlogs :\n"
+        if len(self.stdout):
+            r += "\nstdout :\n"
             r += "-"*80 + '\n'
-            r += "\n".join(self.logs)
+            r += "\n".join(self.stdout)
         return r
 
 
