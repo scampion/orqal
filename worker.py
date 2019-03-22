@@ -85,7 +85,7 @@ def worker(j):
 
 def containers():
     for d in dockers:
-        yield {d.info()['Name']: [(c.id, c.image, c.status) for c in d.containers.list()]}
+        yield {d.info()['Name']: [(c.id, c.image.tags[0], c.status) for c in d.containers.list()]}
 
 
 def status(tds):
@@ -112,8 +112,8 @@ def main():
             t = threading.Thread(target=worker, args=(j,))
             threads[id_] = t
             t.start()
-        if len(threads) > conf.max_threads:
-            time.sleep(5)
+            if len(threads) > conf.max_threads:
+                time.sleep(5)
         time.sleep(5)
         status(threads)
 
