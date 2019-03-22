@@ -1,13 +1,14 @@
 import datetime
-import json
 
-from flask import Flask, request, abort, jsonify
-from flask_pymongo import PyMongo
-from bson.objectid import ObjectId
 from bson.json_util import dumps
+from bson.objectid import ObjectId
+from flask import Flask, request, abort
+from flask_pymongo import PyMongo
+
+import conf
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://localhost:27017/madlab"
+app.config["MONGO_URI"] = conf.mongourl
 mongo = PyMongo(app)
 
 
