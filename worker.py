@@ -89,15 +89,15 @@ def containers():
 
 
 def status(tds):
-    s = {"_id":  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-           "_doc": __doc__,
-           "_last_update":  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-           "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
-           "hosts": conf.docker_hosts,
-           "nodes": [d.info() for d in dockers],
-           "containers": [c for c in containers()],
-           "threads": {str(j): t.getName() for j, t in tds.items()},
-           }
+    s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+         "_doc": __doc__,
+         "_last_update": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+         "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
+         "hosts": conf.docker_hosts,
+         "nodes": [d.info() for d in dockers],
+         "containers": [c for c in containers()],
+         "threads": {str(j): t.getName() for j, t in tds.items()},
+         }
     client.madlab.status.insert(s, check_keys=False)
 
 

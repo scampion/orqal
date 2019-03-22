@@ -59,7 +59,7 @@ class VirusTotal(AbstractWorker):
     docker_url = "registry.gitlab.inria.fr/scampion/madlab/virustotal"
 
     def get_cmd(self, params):
-        api_key  = "665a6fda794f671b77720b314944f2409429e9d9b6f62b0bdaa003fa94126ec1"
+        api_key = "665a6fda794f671b77720b314944f2409429e9d9b6f62b0bdaa003fa94126ec1"
         cmd = "--api %s lookup %s" % (api_key, self.job.input)
         self.job.cmd = cmd
         return cmd
