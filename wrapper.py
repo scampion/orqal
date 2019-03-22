@@ -33,6 +33,19 @@ class TestProd(AbstractWorker):
     def set_result(self, job):
         job.set_result("My results")
 
+
+class Rabin2(AbstractWorker):
+    docker_url = "madlab:5000/radare2"
+    volumes = {'/database': {'bind': '/database', 'mode': 'ro'}}
+
+    def get_cmd(self, params):
+        return "rabin2 -I %s" % self.job.input
+
+    def set_result(self, job):
+        r = {l.split()[0].replace('.','_'): l.split()[1] for l in job.stdout if len(l.split()) == 2}
+        job.set_result(r)
+
+
 class Test(AbstractWorker):
     docker_url = "registry.gitlab.inria.fr/scampion/madlab/test_module"
 
