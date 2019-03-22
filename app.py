@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from flask import Flask, request, abort, jsonify
@@ -12,13 +13,9 @@ mongo = PyMongo(app)
 
 @app.route('/')
 def index():
-    with open('status.json') as s:
-        response = app.response_class(
-            response=s.read(),
-            status=200,
-            mimetype='application/json'
-        )
-        return response
+    d = (datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")
+    data = mongo.db.status.find_one_or_404({"_last_update": {"$gt": d}})
+    return dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/job', methods=['POST'])
