@@ -24,7 +24,7 @@ class AbstractWorker:
         self.job.run(client.containers.run(self.docker_url + ':' + tag,
                                            cmd, mem_limit=mem_limit, nano_cpus=nano_cpus,
                                            volumes=self.volumes,
-                                           detach=True, auto_remove=conf.auto_remove))
+                                           detach=True, auto_remove=False))
         self.set_result(self.job)
 
 

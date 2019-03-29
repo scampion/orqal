@@ -50,12 +50,13 @@ class Job(madlab.Job):
 
     def run(self, c):
         self.container = c
-        while c.status in ["running", "created"]:
+        while c and c.status in ["running", "created"]:
             self.status(c.status)
             time.sleep(1)
             c.reload()
         self.status(c.status)
         self.parse_logs(c)
+        c.remove()
 
     def save(self):
         d = self.__dict__.copy()
@@ -116,6 +117,7 @@ def main():
         for r in client.madlab.jobs.find({'current_status': None}):
             id_ = r['_id']
             j = Job(id_)
+            log.debug("Job to launch %s", j)
             host, model = host_fit(j)
             if host and model:
                 j.status('init')
@@ -124,6 +126,7 @@ def main():
                 t.start()
             # if len(threads) > conf.max_threads:
             # time.sleep(5)
+        print('Wait ...')
         time.sleep(5)
 
 
