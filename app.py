@@ -33,7 +33,9 @@ def index():
          "_last_update": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
          "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
          "hosts": conf.docker_hosts,
-         "nodes": [d['docker'].info() for d in dockers.values()],
+         "nodes": {ip: {"info": d['docker'].info(),
+                        "containers": [api.inspect_container(c) for c in d['api'].containers()]}
+                   for ip, d in dockers.items()},
          "containers": [c for c in containers()]
          }
 
