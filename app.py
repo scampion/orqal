@@ -3,6 +3,7 @@ import inspect
 import sys
 
 import docker
+import flask
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from flask import Flask, request, abort
@@ -13,8 +14,6 @@ import conf
 app = Flask(__name__)
 app.config["MONGO_URI"] = conf.mongourl
 mongo = PyMongo(app)
-
-status_list = mongo.db.jobs.find().distinct('current_status')
 
 
 @app.route('/debug')
@@ -34,6 +33,7 @@ def index():
                    'model': m}
                for h, m in conf.docker_hosts.items()}
 
+    status_list = mongo.db.jobs.find().distinct('current_status')
     status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}
     import wrapper
     s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -71,7 +71,12 @@ def get_job(id):
 def get_jobs_status():
     data = request.get_json()
     if data is None or request.method == 'GET':
-        return dumps({s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list})
+        status_list = mongo.db.jobs.find().distinct('current_status')
+        status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}
+        status['todo'] = status.pop(None)
+        response = flask.jsonify(status)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
     else:
         jobs = mongo.db.jobs.aggregate(
             [{'$group': {'_id': {'status': '$status'}, 'ids': {'$addToSet': {'$toString': "$_id"}}}}])

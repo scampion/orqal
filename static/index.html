@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Sufee Admin - HTML5 Admin Template</title>
+    <title>MADLAB - Dashboard</title>
     <meta name="description" content="Sufee Admin - HTML5 Admin Template">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -607,19 +607,71 @@
             <!--</div>-->
 
 
-            <!--<div class="col-xl-3 col-lg-6">-->
-                <!--<div class="card">-->
-                    <!--<div class="card-body">-->
-                        <!--<div class="stat-widget-one">-->
-                            <!--<div class="stat-icon dib"><i class="ti-money text-success border-success"></i></div>-->
-                            <!--<div class="stat-content dib">-->
-                                <!--<div class="stat-text">Total Profit</div>-->
-                                <!--<div class="stat-digit">1,012</div>-->
-                            <!--</div>-->
-                        <!--</div>-->
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
+            <div class="col-xl-3 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-widget-one">
+                            <div class="stat-icon dib"><i class="ti-pulse text-info border-info "></i></div>
+                            <div class="stat-content dib">
+                                <div class="stat-text">Job todo</div>
+                                <div class="stat-digit" id="job_todo">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="col-xl-3 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-widget-one">
+                            <div class="stat-icon dib"><i class="ti-bolt text-success border-success"></i></div>
+                            <div class="stat-content dib">
+                                <div class="stat-text">Job in progress</div>
+                                <div class="stat-digit" id="job_in_progress">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="col-xl-3 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-widget-one">
+                            <div class="stat-icon dib"><i class="ti-check text-info border-info"></i></div>
+                            <div class="stat-content dib">
+                                <div class="stat-text">Job exited</div>
+                                <div class="stat-digit" id="job_exited">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="col-xl-3 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-widget-one">
+                            <div class="stat-icon dib"><i class="ti-thumb-down text-danger border-danger"></i></div>
+                            <div class="stat-content dib">
+                                <div class="stat-text">Job errors</div>
+                                <div class="stat-digit" id="job_error">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
 
 
             <!--<div class="col-xl-3 col-lg-6">-->
@@ -697,6 +749,15 @@
                 normalizeFunction: 'polynomial'
             });
         })(jQuery);
+    </script>
+
+    <script type="text/javascript">
+        jQuery.get("http://madlab:5001/jobs/status", function( data ) {
+            jQuery("#job_in_progress" ).html(data['todo']);
+            jQuery("#job_exited" ).html(data['exited']);
+            jQuery("#job_error" ).html(data['error']);
+            jQuery("#job_in_progress" ).html(data['created']);
+        });
     </script>
 
 </body>
