@@ -7,18 +7,22 @@ import conf
 class AbstractWorker:
     docker_url = None
     volumes = None
+    threads = None  # mean take all cores available on host by default
+    memory_in_gb = None  # idem for memory
 
     def __init__(self, job):
         self.log = logging.getLogger(str(self.__class__))
         self.job = job
 
-    def run(self, client, tag='latest'):
+    def run(self, client, model, tag='latest'):
         self.log.debug("Pull image %s", self.docker_url)
         client.images.pull(self.docker_url, tag, auth_config=conf.auth_config)
-
+        # compute limit
+        mem_limit = int(self.memory_in_gb * 10 ** 9 if self.memory_in_gb else model['memory_in_gb'])
+        nano_cpus = int(10**9 * model['threads'] / self.threads if self.threads else 10**9)
         cmd = self.get_cmd(self.job.params.get('app', None))
         self.job.run(client.containers.run(self.docker_url + ':' + tag,
-                                           cmd,
+                                           cmd, mem_limit=mem_limit, nano_cpus=nano_cpus,
                                            volumes=self.volumes,
                                            detach=True, auto_remove=conf.auto_remove))
         self.set_result(self.job)
@@ -37,12 +41,14 @@ class TestProd(AbstractWorker):
 class Rabin2(AbstractWorker):
     docker_url = "madlab:5000/radare2"
     volumes = {'/database': {'bind': '/database', 'mode': 'ro'}}
+    threads = 1
+    memory_in_gb = 1
 
     def get_cmd(self, params):
         return "rabin2 -I %s" % self.job.input
 
     def set_result(self, job):
-        r = {l.split()[0].replace('.','_'): l.split()[1] for l in job.stdout if len(l.split()) == 2}
+        r = {l.split()[0].replace('.', '_'): l.split()[1] for l in job.stdout if len(l.split()) == 2}
         job.set_result(r)
 
 

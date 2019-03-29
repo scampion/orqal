@@ -23,7 +23,11 @@ from pymongo import MongoClient
 
 client = MongoClient(conf.mongourl)
 
-dockers = [docker.DockerClient(base_url=h, version=conf.docker_api_version) for h in conf.docker_hosts]
+dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api_version),
+               'api': docker.APIClient(base_url=h, version=conf.docker_api_version),
+               'model': m}
+           for h, m in conf.docker_hosts.items()}
+
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)
 
@@ -68,13 +72,13 @@ class Job(madlab.Job):
         self.__dict__.update(data)
 
 
-def worker(j):
+def worker(j, host, model):
     log.info("Thread start : %s", j)
     for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             log.info("Run %s %s", name, obj)
             try:
-                obj(j).run(dockers[0])
+                obj(j).run(host, model)
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
                 j.stderr.append(str(e))
@@ -82,39 +86,45 @@ def worker(j):
     log.info("Thread stop : %s", j)
 
 
-def containers():
-    for d in dockers:
-        yield {d.info()['Name']: [(c.id, c.image.tags[0], c.status) for c in d.containers.list()]}
+def app_limit(j):
+    for name, obj in inspect.getmembers(sys.modules["wrapper"]):
+        if name != 'Job' and name == j.app and inspect.isclass(obj):
+            return obj(j).threads, obj(j).memory_in_gb
 
 
-def status(tds):
-    s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-         "_doc": __doc__,
-         "_last_update": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-         "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
-         "hosts": conf.docker_hosts,
-         "nodes": [d.info() for d in dockers],
-         "containers": [c for c in containers()],
-         "threads": {str(j): t.getName() for j, t in tds.items()},
-         }
-    client.madlab.status.insert(s, check_keys=False)
+def host_fit(j):
+    threads_needed, memory_needed = app_limit(j)
+    for d in dockers.values():
+        api = d['api']
+        m = d['model']
+        cpu_needed = threads_needed * 10 ** 9 / m['threads'] if threads_needed else 10 ** 9
+        memory_needed = memory_needed * 10 ** 9 if memory_needed else m['memory_in_gb'] * 10 ** 9
+        mem_used = sum([api.inspect_container(c)['HostConfig']['Memory'] for c in api.containers()])
+        cpu_used = sum([api.inspect_container(c)['HostConfig']['NanoCpus'] for c in api.containers()])
+        mem_avai = m['memory_in_gb'] * 10 ** 9 - mem_used
+        cpu_avai = 10 ** 9 - cpu_used
+        log.debug("best fit called for job %s:%s : %03d %03d - available %03d %03d",
+                  j.app, j._id, memory_needed, threads_needed, mem_avai, cpu_avai)
+        if mem_avai >= memory_needed and cpu_avai >= cpu_needed:
+            return d['docker'], d['model']
+    return None, None
 
 
 def main():
     threads = {}
-    status(threads)
     while True:
         for r in client.madlab.jobs.find({'current_status': None}):
             id_ = r['_id']
             j = Job(id_)
-            j.status('init')
-            t = threading.Thread(target=worker, args=(j,))
-            threads[id_] = t
-            t.start()
-            if len(threads) > conf.max_threads:
-                time.sleep(5)
+            host, model = host_fit(j)
+            if host and model:
+                j.status('init')
+                t = threading.Thread(target=worker, args=(j, host, model))
+                threads[id_] = t
+                t.start()
+            # if len(threads) > conf.max_threads:
+            # time.sleep(5)
         time.sleep(5)
-        status(threads)
 
 
 if __name__ == '__main__':
