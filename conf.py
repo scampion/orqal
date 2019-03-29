@@ -5,4 +5,3 @@ docker_hosts = {'192.168.100.51:2376': Cisco_UCS_B200_M4,
 docker_api_version = '1.37'
 auth_config = {'username': 'scampion',
                'password': '65sX2-9sSXSp-hs-XeZ8'}
-max_threads = 5
