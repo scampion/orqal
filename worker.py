@@ -14,7 +14,6 @@ import time
 import traceback
 
 import docker
-import json
 
 import conf
 import madlab

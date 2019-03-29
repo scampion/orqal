@@ -1,11 +1,14 @@
 import datetime
+import inspect
+import sys
 
+import docker
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from flask import Flask, request, abort
 from flask_pymongo import PyMongo
 
-import conf
+import conf, wrapper
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = conf.mongourl
@@ -14,9 +17,27 @@ mongo = PyMongo(app)
 
 @app.route('/')
 def index():
+    def containers():
+        for d in dockers.values():
+            yield {d['docker'].info()['Name']: [(c.id, c.image.tags[0], c.status) for c in d['docker'].containers.list()]}
+
+    dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api_version),
+                   'api': docker.APIClient(base_url=h, version=conf.docker_api_version),
+                   'model': m}
+               for h, m in conf.docker_hosts.items()}
+
     d = (datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")
-    data = mongo.db.status.find_one_or_404({"_last_update": {"$gt": d}})
-    return dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+    s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+         "_doc": __doc__,
+         "_last_update": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+         "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
+         "hosts": conf.docker_hosts,
+         "nodes": [d['docker'].info() for d in dockers.values()],
+         "containers": [c for c in containers()]
+         }
+
+    return dumps(s), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/job', methods=['POST'])
