@@ -14,31 +14,33 @@ app = Flask(__name__)
 app.config["MONGO_URI"] = conf.mongourl
 mongo = PyMongo(app)
 
+status_list = mongo.db.jobs.find().distinct('current_status')
+
 
 @app.route('/')
 def index():
     def containers():
         for d in dockers.values():
-            yield {d['docker'].info()['Name']: [(c.id, c.image.tags[0], c.status) for c in d['docker'].containers.list()]}
+            yield {
+                d['docker'].info()['Name']: [(c.id, c.image.tags[0], c.status) for c in d['docker'].containers.list()]}
 
     dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api_version),
                    'api': docker.APIClient(base_url=h, version=conf.docker_api_version),
                    'model': m}
                for h, m in conf.docker_hosts.items()}
 
-    d = (datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")
+    status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}
 
     s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
          "_doc": __doc__,
-         "_last_update": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+         "status": status,
          "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
          "hosts": conf.docker_hosts,
          "nodes": {ip: {"info": d['docker'].info(),
-                        "containers": [api.inspect_container(c) for c in d['api'].containers()]}
+                        "containers": [d['api'].inspect_container(c) for c in d['api'].containers()]}
                    for ip, d in dockers.items()},
          "containers": [c for c in containers()]
          }
-
     return dumps(s), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
@@ -48,6 +50,7 @@ def create_job():
     if data is None:
         abort(500)
     del data['_id']
+    data['ctime'] = datetime.datetime.now()
     _id = mongo.db.jobs.insert(data)
     return str(_id)
 
