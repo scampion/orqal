@@ -62,16 +62,17 @@ def get_job(id):
     return dumps(data)
 
 
-@app.route('/jobs/status', methods=['POST'])
+@app.route('/jobs/status')
 def get_jobs_status():
     data = request.get_json()
-    if data is None:
-        abort(500)
-    jobs = mongo.db.jobs.aggregate(
-        [{'$group': {'_id': {'status': '$status'}, 'ids': {'$addToSet': {
-            '$toString': "$_id"
-        }}}}])
-    return dumps(jobs)
+    if data is None or request.method == 'GET':
+        return dumps({s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list})
+    else:
+        jobs = mongo.db.jobs.aggregate(
+            [{'$group': {'_id': {'status': '$status'}, 'ids': {'$addToSet': {
+                '$toString': "$_id"
+            }}}}])
+        return dumps(jobs)
 
 
 if __name__ == '__main__':
