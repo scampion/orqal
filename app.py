@@ -8,13 +8,18 @@ from bson.objectid import ObjectId
 from flask import Flask, request, abort
 from flask_pymongo import PyMongo
 
-import conf, wrapper
+import conf
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = conf.mongourl
 mongo = PyMongo(app)
 
 status_list = mongo.db.jobs.find().distinct('current_status')
+
+
+@app.route('/debug')
+def debug():
+    return str({s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list})
 
 
 @app.route('/')
@@ -30,7 +35,7 @@ def index():
                for h, m in conf.docker_hosts.items()}
 
     status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}
-
+    import wrapper
     s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
          "_doc": __doc__,
          "status": status,
@@ -69,10 +74,9 @@ def get_jobs_status():
         return dumps({s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list})
     else:
         jobs = mongo.db.jobs.aggregate(
-            [{'$group': {'_id': {'status': '$status'}, 'ids': {'$addToSet': {
-                '$toString': "$_id"
-            }}}}])
+            [{'$group': {'_id': {'status': '$status'}, 'ids': {'$addToSet': {'$toString': "$_id"}}}}])
         return dumps(jobs)
+
 
 @app.route('/dataset.json')
 def dataset():
