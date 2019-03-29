@@ -74,6 +74,10 @@ def get_jobs_status():
             }}}}])
         return dumps(jobs)
 
+@app.route('/dataset.json')
+def dataset():
+    return dumps(mongo.db.dataset.find())
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5001, debug=True)
