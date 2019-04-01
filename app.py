@@ -11,8 +11,6 @@ from flask_pymongo import PyMongo
 
 import conf
 
-MADLAB_JOBS_DIR = os.environ.get("MADLAB_JOBS_DIR", "/data")
-
 app = Flask(__name__)
 app.config["MONGO_URI"] = conf.mongourl
 mongo = PyMongo(app)
@@ -72,7 +70,7 @@ def get_job(id):
 
 @app.route('/job/<id>/download/<path:filename>')
 def download_job_file(id, filename):
-    path = os.path.join(MADLAB_JOBS_DIR, "database", "madlab", id)
+    path = os.path.join(conf.jobs_dir, "database", "madlab", id)
     return send_from_directory(directory=path, filename=filename, as_attachment=True)
 
 
