@@ -1,5 +1,6 @@
 import datetime
 import inspect
+import os.path
 import sys
 
 import docker
@@ -75,6 +76,12 @@ def get_job(id):
     data = mongo.db.jobs.find_one_or_404({'_id': ObjectId(id)})
     data['_id'] = id
     return dumps(data)
+
+
+@app.route('/job/<id>/download/<path:filename>')
+def download_job_file(id, filename):
+    path = os.path.join(conf.jobs_dir, "database", "madlab", id)
+    return send_from_directory(directory=path, filename=filename, as_attachment=True)
 
 
 @app.route('/jobs/status')
