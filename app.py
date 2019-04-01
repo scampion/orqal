@@ -6,7 +6,7 @@ import docker
 import flask
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory, render_template
 from flask_pymongo import PyMongo
 
 import conf
@@ -23,6 +23,16 @@ def debug():
 
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+
+@app.route('/jobs_<string:status>')
+def jobs_(status):
+    return render_template('jobs.html', jobs=mongo.db.jobs.find({'current_status': status}))
+
+
+@app.route('/status')
+def status():
     def containers():
         for d in dockers.values():
             yield {
@@ -73,7 +83,7 @@ def get_jobs_status():
     if data is None or request.method == 'GET':
         status_list = mongo.db.jobs.find().distinct('current_status')
         status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}
-        status['todo'] = status.pop(None)
+        status['todo'] = status.pop(None) if None in status.keys() else 0
         response = flask.jsonify(status)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
@@ -86,6 +96,11 @@ def get_jobs_status():
 @app.route('/dataset.json')
 def dataset():
     return dumps(mongo.db.dataset.find())
+
+
+@app.route('/<path:path>')
+def send_static(path):
+    return send_from_directory('static', path)
 
 
 if __name__ == '__main__':

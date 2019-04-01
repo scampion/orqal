@@ -752,8 +752,8 @@
     </script>
 
     <script type="text/javascript">
-        jQuery.get("http://madlab:5001/jobs/status", function( data ) {
-            jQuery("#job_in_progress" ).html(data['todo']);
+        jQuery.get("jobs/status", function( data ) {
+            jQuery("#job_todo" ).html(data['todo']);
             jQuery("#job_exited" ).html(data['exited']);
             jQuery("#job_error" ).html(data['error']);
             jQuery("#job_in_progress" ).html(data['created']);
