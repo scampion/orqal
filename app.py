@@ -1,14 +1,17 @@
 import datetime
 import inspect
+import os.path
 import sys
 
 import docker
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory
 from flask_pymongo import PyMongo
 
 import conf
+
+MADLAB_JOBS_DIR = os.environ.get("MADLAB_JOBS_DIR", "/data")
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = conf.mongourl
@@ -65,6 +68,12 @@ def get_job(id):
     data = mongo.db.jobs.find_one_or_404({'_id': ObjectId(id)})
     data['_id'] = id
     return dumps(data)
+
+
+@app.route('/job/<id>/download/<path:filename>')
+def download_job_file(id, filename):
+    path = os.path.join(MADLAB_JOBS_DIR, "database", "madlab", id)
+    return send_from_directory(directory=path, filename=filename, as_attachment=True)
 
 
 @app.route('/jobs/status')
