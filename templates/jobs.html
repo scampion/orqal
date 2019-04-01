@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="content mt-3">
+
+    <ul>
+        {% for j in jobs %}
+        <li>
+            {{ j }} {{loop.counter}}
+        </li>
+        {% endfor %}
+    </ul>
+
+</div>
+{% endblock %}
+
+

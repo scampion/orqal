@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="content mt-3">
+
+        <div class="col-xl-3 col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-one">
+                        <div class="stat-icon dib"><i class="ti-pulse text-info border-info "></i></div>
+                        <div class="stat-content dib">
+                            <div class="stat-text">Job todo</div>
+                            <div class="stat-digit" id="job_todo">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xl-3 col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-one">
+                        <div class="stat-icon dib"><i class="ti-bolt text-success border-success"></i></div>
+                        <div class="stat-content dib">
+                            <div class="stat-text">Job in progress</div>
+                            <div class="stat-digit" id="job_in_progress">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xl-3 col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-one">
+                        <div class="stat-icon dib"><i class="ti-check text-info border-info"></i></div>
+                        <div class="stat-content dib">
+                            <div class="stat-text">Job exited</div>
+                            <div class="stat-digit" id="job_exited">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xl-3 col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-one">
+                        <div class="stat-icon dib"><i class="ti-thumb-down text-danger border-danger"></i></div>
+                        <div class="stat-content dib">
+                            <div class="stat-text">Job errors</div>
+                            <div class="stat-digit" id="job_error">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div> <!-- .content -->
+{% endblock %}
+
+
+{% block script %}
+<script type="text/javascript">
+    jQuery.get("jobs/status", function (data) {
+        jQuery("#job_todo").html(data['todo']);
+        jQuery("#job_exited").html(data['exited']);
+        jQuery("#job_error").html(data['error']);
+        jQuery("#job_in_progress").html(data['created']);
+    });
+</script>
+{% endblock %}
+
