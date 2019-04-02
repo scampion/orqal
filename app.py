@@ -1,3 +1,4 @@
+import collections
 import datetime
 import inspect
 import os
@@ -36,6 +37,30 @@ async def jobs_status(request):
     headers = sorted(jobs[0].keys())
     logs = [[j[key] for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
+
+
+@routes.get('/load')
+async def jobs_status(request):
+
+    def inspects(h): # if container is removed during the request pass exception
+        api = docker.APIClient(base_url=h, version=conf.docker_api_version)
+        for c in api.containers():
+            try:
+                yield dict(api.inspect_container(c))
+            except Exception:
+                pass
+
+    def load_metrics():
+        for h, m in conf.docker_hosts.items():
+            s = list(inspects(h))
+            mem_used = sum(v['HostConfig']['Memory'] for v in s)
+            cpu_used = sum(v['HostConfig']['NanoCpus'] for v in s)
+            images = collections.Counter([v['Config']['Image'] for v in s])
+            yield {h: {'mem': (mem_used / 10**9 * 100.0 / m['memory_in_gb']),
+                       "cpu": cpu_used / 10**9 * 100.0,
+                       'images': images}}
+
+    return web.json_response(list(load_metrics()))
 
 
 @routes.get('/clean')
@@ -109,7 +134,6 @@ async def download_job_file(request):
     path = request.match_info.get('path')
     filepath = os.path.join(conf.jobs_dir, id, path)
     return web.FileResponse(filepath)
-
 
 
 @routes.get('/dataset.json')

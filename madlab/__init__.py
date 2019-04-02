@@ -120,5 +120,4 @@ class Job:
 
 if __name__ == '__main__':
     j = Job(app="Test", input=None, params={"app": {'echo': 'test', 'time': 10, 'exit_code': 2}})
-    print(j.current_status)
     wait([j])

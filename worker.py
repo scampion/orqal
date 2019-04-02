@@ -49,19 +49,17 @@ class Job(madlab.Job):
             self.save()
 
     def run(self, c):
-        print("run")
-        print(c.status)
         try:
             while c and c.status in ["running", "created"]:
                 self.status(c.status)
                 time.sleep(1)
                 c.reload()
+            self.status(c.status)
+            self.parse_logs(c)
         except Exception as e:
             log.error(e)
             self.status("error")
         finally:
-            self.status(c.status)
-            self.parse_logs(c)
             c.remove()
 
     def save(self):
@@ -130,6 +128,8 @@ def main():
                 t = threading.Thread(target=worker, args=(j, host, model))
                 threads[id_] = t
                 t.start()
+            else:
+                log.debug("No ressource available for job %s", j)
             # if len(threads) > conf.max_threads:
             # time.sleep(5)
         print('Wait ...')
