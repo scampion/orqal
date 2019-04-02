@@ -46,17 +46,16 @@ class ThreadPool:
         self.tasks.join()
 
 
-
 __version__ = '0.0.2'
 MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
 
 logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('madlab')
 log.setLevel(logging.DEBUG)
-pool = ThreadPool(128)
+pool = ThreadPool(2)
 
 try:
-    services = requests.get(MADLAB_HOST).json()['_services']
+    services = requests.get(MADLAB_HOST + "/status").json()['_services']
 except Exception as e:
     log.error(str(e))
 

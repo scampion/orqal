@@ -1,48 +1,51 @@
 import datetime
 import inspect
-import os.path
+import os
 import sys
 
+import aiohttp_jinja2 as aiohttp_jinja2
 import docker
-import flask
+import jinja2
+import logging
+from aiohttp import web
+from bson import ObjectId
 from bson.json_util import dumps
-from bson.objectid import ObjectId
-from flask import Flask, request, abort, send_from_directory, render_template, url_for, redirect
-from flask_pymongo import PyMongo
+from pymongo import MongoClient
 
 import conf
 
-app = Flask(__name__)
-app.config["MONGO_URI"] = conf.mongourl
-mongo = PyMongo(app)
+mongo = MongoClient(conf.mongourl)
+
+routes = web.RouteTableDef()
+
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger('madlab')
 
 
-@app.route('/debug')
-def debug():
-    return str({s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list})
+@routes.get('/')
+@aiohttp_jinja2.template('index.html')
+async def index(request):
+    return {}
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/jobs_<string:status>')
-def jobs_(status):
-    jobs = mongo.db.jobs.find({'current_status': status})
+@routes.get('/jobs_{status}')
+@aiohttp_jinja2.template('jobs.html')
+async def jobs_status(request):
+    status = request.match_info.get('id')
+    jobs = mongo.madlab.jobs.find({'current_status': status})
     headers = sorted(jobs[0].keys())
     logs = [[j[key] for key in headers] for j in jobs]
-    return render_template('jobs.html', headers=headers, logs=logs)
+    return {'headers': headers, 'logs': logs}
 
 
-@app.route('/clean')
-def clean():
-    mongo.db.jobs.delete_many({})
-    return redirect(url_for('index'))
+@routes.get('/clean')
+async def clean(request):
+    mongo.madlab.jobs.delete_many({})
+    return web.HTTPFound(location="/")
 
 
-@app.route('/status')
-def status():
+@routes.get('/status')
+async def status(request):
     def containers():
         for d in dockers.values():
             yield {
@@ -66,59 +69,60 @@ def status():
                    for ip, d in dockers.items()},
          "containers": [c for c in containers()]
          }
-    return dumps(s), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    return web.json_response(s)
 
 
-@app.route('/job', methods=['POST'])
-def create_job():
-    data = request.get_json(force=True)
+@routes.post('/job')
+async def create_job(request):
+    data = await request.json()
     if data is None:
-        abort(500)
+        web.Response(status=500)
     del data['_id']
     data['ctime'] = datetime.datetime.now()
-    _id = mongo.db.jobs.insert(data)
-    return str(_id)
+    log.debug(data)
+    _id = mongo.madlab.jobs.insert(data)
+    return web.Response(text=str(_id))
 
 
-@app.route('/job/<id>')
-def get_job(id):
-    data = mongo.db.jobs.find_one_or_404({'_id': ObjectId(id)})
-    data['_id'] = id
-    return dumps(data)
+@routes.get('/jobs/status')
+async def get_status(request):
+    status_list = mongo.madlab.jobs.find().distinct('current_status')
+    status = {s: mongo.madlab.jobs.find({'current_status': s}).count() for s in status_list}
+    status['todo'] = status.pop(None) if None in status.keys() else 0
+    return web.json_response(status, headers={'Access-Control-Allow-Origin': "*"})
 
 
-@app.route('/job/<id>/download/<path:filename>')
-def download_job_file(id, filename):
-    path = os.path.join(conf.jobs_dir, "database", "madlab", id)
-    return send_from_directory(directory=path, filename=filename, as_attachment=True)
-
-
-@app.route('/jobs/status')
-def get_jobs_status():
-    data = request.get_json()
-    if data is None or request.method == 'GET':
-        status_list = mongo.db.jobs.find().distinct('current_status')
-        status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}
-        status['todo'] = status.pop(None) if None in status.keys() else 0
-        response = flask.jsonify(status)
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response
+@routes.get('/job/{id}')
+async def get_job(request):
+    id = request.match_info.get('id')
+    data = mongo.madlab.jobs.find_one({'_id': ObjectId(id)})
+    if len(data) == 0:
+        web.Response(status=404)
     else:
-        jobs = mongo.db.jobs.aggregate(
-            [{'$group': {'_id': {'status': '$status'}, 'ids': {'$addToSet': {'$toString': "$_id"}}}}])
-        return dumps(jobs)
+        data['_id'] = id
+        return web.Response(body=dumps(data), content_type='application/json')
 
 
-@app.route('/dataset.json')
-def dataset():
-    return dumps(mongo.db.dataset.find())
+@routes.get('/job/{id}/download/{path}')
+async def download_job_file(request):
+    id = request.match_info.get('id')
+    path = request.match_info.get('path')
+    filepath = os.path.join(conf.jobs_dir, id, path)
+    return web.FileResponse(filepath)
 
 
-@app.route('/<path:path>')
-def send_static(path):
-    return send_from_directory('static', path)
 
+@routes.get('/dataset.json')
+async def dataset(request):
+    return web.Response(body=dumps(mongo.madlab.dataset.find()), content_type='application/json')
+
+
+app = web.Application()
+aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('./templates'))
+app.router.add_static('/assets/', path='static/assets', name='assets')
+app.router.add_static('/images/', path='static/images', name='images')
+app.router.add_static('/vendors/', path='static/vendors', name='vendors')
+app.add_routes(routes)
 
 if __name__ == '__main__':
-    # app.run(host="0.0.0.0", port=5001, debug=True)
-    app.run(host="0.0.0.0", port=5001, threaded=True, debug=False)
+    web.run_app(app, port=5001)

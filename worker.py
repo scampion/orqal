@@ -49,13 +49,20 @@ class Job(madlab.Job):
             self.save()
 
     def run(self, c):
-        while c and c.status in ["running", "created"]:
+        print("run")
+        print(c.status)
+        try:
+            while c and c.status in ["running", "created"]:
+                self.status(c.status)
+                time.sleep(1)
+                c.reload()
+        except Exception as e:
+            log.error(e)
+            self.status("error")
+        finally:
             self.status(c.status)
-            time.sleep(1)
-            c.reload()
-        self.status(c.status)
-        self.parse_logs(c)
-        c.remove()
+            self.parse_logs(c)
+            c.remove()
 
     def save(self):
         d = self.__dict__.copy()

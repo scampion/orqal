@@ -23,6 +23,12 @@ MADLAB is a SaaS (Software as a Service) platform provided by LHS.
 
     MADLAB_HOST="http://localhost:5000"
 	
+	
+## Run 
+
+    gunicorn app:app --bind 0.0.0.0:5001 --worker-class aiohttp.GunicornWebWorker  --workers 8
+
+	
 
 ## On docker node :
 
