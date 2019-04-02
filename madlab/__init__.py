@@ -2,8 +2,49 @@ import json
 import logging
 import os
 import time
+import sys
+
+from threading import Thread
+
+IS_PY2 = sys.version_info < (3, 0)
+if IS_PY2:
+    from Queue import Queue
+else:
+    from queue import Queue
 
 import requests
+
+
+class Worker(Thread):
+    def __init__(self, tasks):
+        Thread.__init__(self)
+        self.tasks = tasks
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        while True:
+            job = self.tasks.get()
+            try:
+                job.create()
+            except Exception as e:
+                log.error(e)
+            finally:
+                self.tasks.task_done()
+
+
+class ThreadPool:
+    def __init__(self, num_threads):
+        self.tasks = Queue(num_threads)
+        for _ in range(num_threads):
+            Worker(self.tasks)
+
+    def create_job(self, job):
+        self.tasks.put(job)
+
+    def wait_completion(self):
+        self.tasks.join()
+
 
 
 __version__ = '0.0.2'
@@ -12,6 +53,7 @@ MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
 logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('madlab')
 log.setLevel(logging.DEBUG)
+pool = ThreadPool(128)
 
 try:
     services = requests.get(MADLAB_HOST).json()['_services']
@@ -20,6 +62,7 @@ except Exception as e:
 
 
 def wait(jobs):
+    pool.wait_completion()
     while not all([j.current_status in ['exited', 'error'] for j in jobs]):
         for j in jobs:
             j.load()
@@ -42,7 +85,8 @@ class Job:
             self.load()
         else:
             log.info("Create job for app %s input %s", app, input)
-            self.create()
+            pool.create_job(self)
+            # self.create()
 
     def status(self, s):
         self.current_status = s
@@ -70,7 +114,7 @@ class Job:
         r = "Job %s | app: %s | input: %s | status: %s" % (self._id, self.app, self.input, self.current_status)
         if len(self.stdout):
             r += "\nstdout :\n"
-            r += "-"*80 + '\n'
+            r += "-" * 80 + '\n'
             r += "\n".join(self.stdout)
         return r
 
