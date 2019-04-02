@@ -3,15 +3,27 @@
 {% block body %}
 <div class="content mt-3">
 
-    <ul>
-        {% for j in jobs %}
-        <li>
-            {{ j }} {{loop.counter}}
-        </li>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            {% for k in headers %}
+            <th scope="col">{{ k }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for j in logs %}
+        <tr>
+            {% for v in j %}
+            <td>{{ v }}</td>
+            {% endfor %}
+        </tr>
         {% endfor %}
-    </ul>
-
+        </tbody>
+    </table>
 </div>
+
+
 {% endblock %}
 
 

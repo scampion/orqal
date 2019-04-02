@@ -29,7 +29,10 @@ def index():
 
 @app.route('/jobs_<string:status>')
 def jobs_(status):
-    return render_template('jobs.html', jobs=mongo.db.jobs.find({'current_status': status}))
+    jobs = mongo.db.jobs.find({'current_status': status})
+    headers = sorted(jobs[0].keys())
+    logs = [[j[key] for key in headers] for j in jobs]
+    return render_template('jobs.html', headers=headers, logs=logs)
 
 
 @app.route('/status')
