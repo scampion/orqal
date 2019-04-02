@@ -7,7 +7,7 @@ import docker
 import flask
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from flask import Flask, request, abort, send_from_directory, render_template
+from flask import Flask, request, abort, send_from_directory, render_template, url_for, redirect
 from flask_pymongo import PyMongo
 
 import conf
@@ -33,6 +33,12 @@ def jobs_(status):
     headers = sorted(jobs[0].keys())
     logs = [[j[key] for key in headers] for j in jobs]
     return render_template('jobs.html', headers=headers, logs=logs)
+
+
+@app.route('/clean')
+def clean():
+    mongo.db.jobs.delete_many({})
+    return redirect(url_for('index'))
 
 
 @app.route('/status')

@@ -49,7 +49,6 @@ class Job(madlab.Job):
             self.save()
 
     def run(self, c):
-        self.container = c
         while c and c.status in ["running", "created"]:
             self.status(c.status)
             time.sleep(1)
