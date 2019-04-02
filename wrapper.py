@@ -17,10 +17,12 @@ class AbstractWorker:
     def run(self, client, model, tag='latest'):
         self.log.debug("Pull image %s", self.docker_url)
         client.images.pull(self.docker_url, tag, auth_config=conf.auth_config)
-        # compute limit
         mem_limit = int(self.memory_in_gb * 10 ** 9 if self.memory_in_gb else model['memory_in_gb'])
         nano_cpus = int(10**9 * model['threads'] / self.threads if self.threads else 10**9)
         cmd = self.get_cmd(self.job.params.get('app', None))
+        self.job.client = client
+        self.job.image = self.docker_url + ':' + tag
+        self.job.cmd = cmd
         self.job.run(client.containers.run(self.docker_url + ':' + tag,
                                            cmd, mem_limit=mem_limit, nano_cpus=nano_cpus,
                                            volumes=self.volumes,
