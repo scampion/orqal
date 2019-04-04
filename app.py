@@ -74,8 +74,8 @@ async def jobs_status(request):
             mem_used = sum(v['HostConfig']['Memory'] for v in s)
             cpu_used = sum(v['HostConfig']['NanoCpus'] for v in s)
             images = collections.Counter([v['Config']['Image'] for v in s])
-            yield {h: {'mem': (mem_used / 10**9 * 100.0 / m['memory_in_gb']),
-                       "cpu": cpu_used / 10**9 * 100.0,
+            yield {h: {'mem': (mem_used / 10 ** 9 * 100.0 / m['memory_in_gb']),
+                       "cpu": cpu_used / 10 ** 9 * 100.0,
                        'images': images}}
 
     return web.json_response(list(load_metrics()))
