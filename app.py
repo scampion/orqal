@@ -1,6 +1,7 @@
 import collections
 import datetime
 import inspect
+import json
 import os
 import sys
 
@@ -39,10 +40,27 @@ async def jobs_status(request):
     return {'headers': headers, 'logs': logs}
 
 
+@routes.post('/batch')
+async def batch(request):
+    resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
+    await resp.prepare(request)
+    buffer = b''
+    async for data, complete in request.content.iter_chunks():
+        buffer = buffer + data
+        if complete:
+            data = json.loads(buffer.decode('utf-8'))
+            del data['_id']
+            data['ctime'] = datetime.datetime.now()
+            _id = mongo.madlab.jobs.insert(data)
+            log.debug("batch %s %s %s", _id, data['input'],  data['app'])
+            await resp.write(_id.binary)
+            buffer = b''
+    return resp
+
+
 @routes.get('/load')
 async def jobs_status(request):
-
-    def inspects(h): # if container is removed during the request pass exception
+    def inspects(h):  # if container is removed during the request pass exception
         api = docker.APIClient(base_url=h, version=conf.docker_api_version)
         for c in api.containers():
             try:
@@ -104,7 +122,7 @@ async def create_job(request):
         web.Response(status=500)
     del data['_id']
     data['ctime'] = datetime.datetime.now()
-    log.debug(data)
+    log.debug("post job from %s for %s", request.transport.get_extra_info('peername'), data)
     _id = mongo.madlab.jobs.insert(data)
     return web.Response(text=str(_id))
 

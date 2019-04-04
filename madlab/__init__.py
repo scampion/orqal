@@ -2,49 +2,7 @@ import json
 import logging
 import os
 import time
-import sys
-
-from threading import Thread
-
-IS_PY2 = sys.version_info < (3, 0)
-if IS_PY2:
-    from Queue import Queue
-else:
-    from queue import Queue
-
 import requests
-
-
-class Worker(Thread):
-    def __init__(self, tasks):
-        Thread.__init__(self)
-        self.tasks = tasks
-        self.daemon = True
-        self.start()
-
-    def run(self):
-        while True:
-            job = self.tasks.get()
-            try:
-                job.create()
-            except Exception as e:
-                log.error(e)
-            finally:
-                self.tasks.task_done()
-
-
-class ThreadPool:
-    def __init__(self, num_threads):
-        self.tasks = Queue(num_threads)
-        for _ in range(num_threads):
-            Worker(self.tasks)
-
-    def create_job(self, job):
-        self.tasks.put(job)
-
-    def wait_completion(self):
-        self.tasks.join()
-
 
 __version__ = '0.0.2'
 MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
@@ -52,7 +10,6 @@ MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
 logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('madlab')
 log.setLevel(logging.DEBUG)
-pool = ThreadPool(2)
 
 try:
     services = requests.get(MADLAB_HOST + "/status").json()['_services']
@@ -61,16 +18,29 @@ except Exception as e:
 
 
 def wait(jobs):
-    pool.wait_completion()
-    while not all([j.current_status in ['exited', 'error'] for j in jobs]):
+    in_progress = jobs
+    while in_progress:
         for j in jobs:
-            j.load()
-        time.sleep(5)
+            if j.load() in ['exited', 'error']:
+                in_progress.remove(j)
+        time.sleep(1)
+
+
+def batch(jobs):
+    def gen(jobs):
+        for j in jobs:
+            yield json.dumps(j.__dict__).encode('utf-8')
+
+    url = MADLAB_HOST + "/batch"
+    r = requests.post(url, data=gen(jobs), stream=True)
+    for c in r.iter_content(chunk_size=12):
+        _id = c.hex()
+        yield Job(id=_id)
 
 
 class Job:
 
-    def __init__(self, id=None, app=None, input=None, params={}):
+    def __init__(self, id=None, app=None, input=None, params={}, start=True):
         self._id = id
         self.app = app
         self.input = input
@@ -82,10 +52,8 @@ class Job:
         self.result = None
         if self._id:
             self.load()
-        else:
-            log.info("Create job for app %s input %s", app, input)
-            pool.create_job(self)
-            # self.create()
+        elif start:
+            self.create()
 
     def status(self, s):
         self.current_status = s
@@ -97,6 +65,7 @@ class Job:
         r.raise_for_status()
         data = r.json()
         self.__dict__.update(data)
+        return self.current_status
 
     def create(self):
         url = MADLAB_HOST + "/job"
