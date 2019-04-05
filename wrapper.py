@@ -43,6 +43,7 @@ class AbstractWorker:
         self.set_result(self.job)
 
 
+
 ########################################################################################################################
 
 class TestProd(AbstractWorker):
@@ -63,6 +64,9 @@ class SCDG(AbstractWorker):
 
     def get_cmd(self, params):
         return "python /code/src/interfaces/cli.py %s params.json" % self.job.input
+
+    def set_result(self, job):
+        pass
 
 
 class Rabin2(AbstractWorker):
