@@ -5,14 +5,14 @@ import time
 import requests
 
 __version__ = '0.0.2'
-MADLAB_HOST = os.environ.get("MADLAB_HOST", "http://madlab.irisa.fr:5001")
+MADLAB_API_URL = os.environ.get("MADLAB_API_URL", "http://madlab.irisa.fr:5001/api")
 
 logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('madlab')
 log.setLevel(logging.DEBUG)
 
 try:
-    services = requests.get(MADLAB_HOST + "/status").json()['_services']
+    services = requests.get(MADLAB_API_URL + "/status").json()['_services']
 except Exception as e:
     log.error(str(e))
 
@@ -27,7 +27,7 @@ def wait(jobs):
 
 
 def batch(jobs):
-    url = MADLAB_HOST + "/batch"
+    url = MADLAB_API_URL + "/batch"
     gen_jobs = (json.dumps(j.__dict__).encode('utf-8') for j in jobs)
     return [Job(id=c.hex()) for c in requests.post(url, data=gen_jobs, stream=True).iter_content(chunk_size=12)]
     # nb: ObjectId is a 12-byte unique identifier
@@ -55,7 +55,7 @@ class Job:
         self.save()
 
     def load(self):
-        url = MADLAB_HOST + "/job/%s" % self._id
+        url = MADLAB_API_URL + "/job/%s" % self._id
         r = requests.get(url)
         r.raise_for_status()
         data = r.json()
@@ -63,7 +63,7 @@ class Job:
         return self.current_status
 
     def create(self):
-        url = MADLAB_HOST + "/job"
+        url = MADLAB_API_URL + "/job"
         r = requests.post(url, data=json.dumps(self.__dict__))
         r.raise_for_status()
         self._id = r.content.decode('utf8')
