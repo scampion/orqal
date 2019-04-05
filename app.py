@@ -42,6 +42,14 @@ async def jobs_status(request):
 
 @routes.post('/batch')
 async def batch(request):
+    """
+    Create to speed up batch submission and reduce http transfert
+
+    Receive an http stream "Transfer-Encoding: chunked" of json
+    and response another http stream with object id bson encoded on 12 bytes when job is inserted
+    :param request:
+    :return:
+    """
     resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
     await resp.prepare(request)
     buffer = b''
