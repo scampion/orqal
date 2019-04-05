@@ -53,19 +53,36 @@
 
         <div id="main-menu" class="main-menu collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <h3 class="menu-title">Jobs</h3><!-- /.menu-title -->
+                {#                <h3 class="menu-title">Jobs</h3><!-- /.menu-title -->#}
                 <li class="menu-item-has-children dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                        <i class="menu-icon fa fa-laptop"></i>Status</a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                       aria-expanded="true">
+                        <i class="menu-icon fa fa-cogs"></i>Jobs</a>
                     <ul class="sub-menu children dropdown-menu">
-                        <li><i class="fa fa-exclamation-triangle"></i><a href="jobs_error">Errors</a></li>
-                        <li><i class="fa fa-spinner"></i><a href="jobs_excited">In rogress</a></li>
                         <li><i class="fa fa-th"></i><a href="jobs/jobs_todo">Todo</a></li>
+                        <li><i class="fa fa-spinner"></i><a href="jobs_running">Running</a></li>
+                        <li><i class="fa fa-check"></i><a href="jobs_excited">Done</a></li>
+                        <li><i class="fa fa-exclamation-triangle"></i><a href="jobs_error">Errors</a></li>
                     </ul>
                 </li>
+
+{#                <h3 class="menu-title"><i class="menu-icon fa fa-book"></i> Doc </h3>#}
+                <li class="menu-item-has-children dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                       aria-expanded="true">
+                        <i class="menu-icon fa fa-book"></i>API</a>
+                       </a>
+                    <ul class="sub-menu children dropdown-menu">
+                        <li><i class="fa fa-file-code-o"></i><a href="/doc">ReDoc</a></li>
+                        <li><i class="fa fa-code"></i><a href="/api/doc">Swagger</a></li>
+                    </ul>
+
+                </li>
+
+                <h3 class="menu-title"><i class="menu-icon fa fa-exclamation-triangle"></i> Danger Zone</h3>
                 <li>
                     <a href="clean">
-                        <i class="menu-icon fa fa-exclamation-triangle"></i>Clean DB</a>
+                        <i class="menu-icon fa fa-bomb"></i>Drop jobs DB</a>
                 </li>
             </ul>
         </div>
