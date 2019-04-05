@@ -43,6 +43,8 @@ class AbstractWorker:
         self.set_result(self.job)
 
 
+########################################################################################################################
+
 class TestProd(AbstractWorker):
     docker_url = "madlab:5000/test_module"
 
@@ -51,6 +53,16 @@ class TestProd(AbstractWorker):
 
     def set_result(self, job):
         job.set_result("My results")
+
+
+class SCDG(AbstractWorker):
+    docker_url = "madlab:5000/scdg/madlab-v2"
+    threads = 1
+    memory_in_gb = 10
+    create_dir = True
+
+    def get_cmd(self, params):
+        return "python /code/src/interfaces/cli.py %s params.json" % self.job.input
 
 
 class Rabin2(AbstractWorker):
