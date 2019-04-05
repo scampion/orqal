@@ -27,20 +27,15 @@ def wait(jobs):
 
 
 def batch(jobs):
-    def gen(jobs):
-        for j in jobs:
-            yield json.dumps(j.__dict__).encode('utf-8')
-
     url = MADLAB_HOST + "/batch"
-    r = requests.post(url, data=gen(jobs), stream=True)
-    for c in r.iter_content(chunk_size=12):
-        _id = c.hex()
-        yield Job(id=_id)
+    gen_jobs = (json.dumps(j.__dict__).encode('utf-8') for j in jobs)
+    return [Job(id=c.hex()) for c in requests.post(url, data=gen_jobs, stream=True).iter_content(chunk_size=12)]
+    # nb: ObjectId is a 12-byte unique identifier
 
 
 class Job:
 
-    def __init__(self, id=None, app=None, input=None, params={}, start=True):
+    def __init__(self, id=None, app=None, input=None, params={}, start=False):
         self._id = id
         self.app = app
         self.input = input
