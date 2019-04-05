@@ -6,6 +6,7 @@ import os
 import sys
 
 import aiohttp_jinja2 as aiohttp_jinja2
+from aiohttp_swagger import setup_swagger
 import docker
 import jinja2
 import logging
@@ -24,9 +25,17 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('madlab')
 
 
+# HTML
+########################################################################################################################
 @routes.get('/')
 @aiohttp_jinja2.template('index.html')
 async def index(request):
+    return {}
+
+
+@routes.get('/doc')
+@aiohttp_jinja2.template('doc.html')
+async def doc(request):
     return {}
 
 
@@ -40,15 +49,23 @@ async def jobs_status(request):
     return {'headers': headers, 'logs': logs}
 
 
+# API
+########################################################################################################################
 @routes.post('/batch')
 async def batch(request):
     """
-    Create to speed up batch submission and reduce http transfert
-
-    Receive an http stream "Transfer-Encoding: chunked" of json
-    and response another http stream with object id bson encoded on 12 bytes when job is inserted
-    :param request:
-    :return:
+    ---
+    description: Create to speed up batch submission and reduce http transfert.
+    Receive an http stream "Transfer-Encoding: chunked" of json.
+    tags:
+    - Batch scheduling
+    produces:
+    - application/octet-stream
+    responses:
+        "200":
+            description: response another http stream with object id bson encoded on 12 bytes when job is inserted
+        "405":
+            description: invalid HTTP Method
     """
     resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
     await resp.prepare(request)
@@ -60,7 +77,7 @@ async def batch(request):
             del data['_id']
             data['ctime'] = datetime.datetime.now()
             _id = mongo.madlab.jobs.insert(data)
-            log.debug("batch %s %s %s", _id, data['input'],  data['app'])
+            log.debug("batch %s %s %s", _id, data['input'], data['app'])
             await resp.write(_id.binary)
             buffer = b''
     return resp
@@ -173,6 +190,7 @@ app.router.add_static('/assets/', path='static/assets', name='assets')
 app.router.add_static('/images/', path='static/images', name='images')
 app.router.add_static('/vendors/', path='static/vendors', name='vendors')
 app.add_routes(routes)
+setup_swagger(app)
 
 if __name__ == '__main__':
-    web.run_app(app, port=5001)
+    web.run_app(app, port=5000)

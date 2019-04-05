@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="content mt-3">
+    <redoc spec-url='/api/doc/swagger.json'></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
+</div>
+
+
+{% endblock %}
+
+
