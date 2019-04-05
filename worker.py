@@ -70,7 +70,6 @@ class Job(madlab.Job):
     def save(self):
         d = self.__dict__.copy()
         del d['container']
-        log.debug(d)
         client.madlab.jobs.replace_one({'_id': self._id}, d)
 
     def set_result(self, data):

@@ -33,8 +33,8 @@ async def index(request):
 @routes.get('/jobs_{status}')
 @aiohttp_jinja2.template('jobs.html')
 async def jobs_status(request):
-    status = request.match_info.get('id')
-    jobs = mongo.madlab.jobs.find({'current_status': status})
+    status = request.match_info.get('status')
+    jobs = list(mongo.madlab.jobs.find({'current_status': status}))
     headers = sorted(jobs[0].keys())
     logs = [[j[key] for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
