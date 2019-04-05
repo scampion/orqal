@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import conf
 
@@ -7,12 +8,24 @@ import conf
 class AbstractWorker:
     docker_url = None
     volumes = None
+    volumes = {'/scratch': {'bind': '/scratch', 'mode': 'rw'},
+               '/database': {'bind': '/database', 'mode': 'ro'}}
+
     threads = None  # mean take all cores available on host by default
     memory_in_gb = None  # idem for memory
+    create_dir = False
 
     def __init__(self, job):
         self.log = logging.getLogger(str(self.__class__))
         self.job = job
+        if self.create_dir and not os.path.exists(self.job.wd):
+            self.setup_dir()
+
+    def setup_dir(self):
+        os.mkdir(self.job.wd, 0o777)
+        os.chmod(self.job.wd, 0o777)  # strange behaviour due to nfs ? we must set permission after
+        with open(os.path.join(self.job.wd, 'params.json'), 'w') as f:
+            json.dump(self.job.params, f)
 
     def run(self, client, model, tag='latest'):
         self.log.debug("Pull image %s", self.docker_url)
@@ -25,7 +38,7 @@ class AbstractWorker:
         self.job.cmd = cmd
         self.job.run(client.containers.run(self.docker_url + ':' + tag,
                                            cmd, mem_limit=mem_limit, nano_cpus=nano_cpus,
-                                           volumes=self.volumes,
+                                           volumes=self.volumes, working_dir=self.job.wd,
                                            detach=True, auto_remove=False))
         self.set_result(self.job)
 

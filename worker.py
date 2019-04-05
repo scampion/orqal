@@ -8,6 +8,7 @@ Stay tuned with the mailing list : madlab@inria.fr
 import datetime
 import inspect
 import logging
+import os
 import sys
 import threading
 import time
@@ -35,6 +36,10 @@ log = logging.getLogger('madlab')
 
 
 class Job(madlab.Job):
+
+    def __init__(self, id=None, app=None, input=None, params={}, start=False):
+        super().__init__(id, app, input, params, start)
+        self.wd = os.path.join(conf.jobs_dir, str(self._id))
 
     def parse_logs(self, c):
         stdout = c.logs(stdout=True, stderr=False)
