@@ -16,18 +16,18 @@
     <meta name="description" content="Sufee Admin - HTML5 Admin Template">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="apple-touch-icon" href="apple-icon.png">
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="/apple-icon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
 
-    <link rel="stylesheet" href="vendors/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="vendors/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="vendors/themify-icons/css/themify-icons.css">
-    <link rel="stylesheet" href="vendors/flag-icon-css/css/flag-icon.min.css">
-    <link rel="stylesheet" href="vendors/selectFX/css/cs-skin-elastic.css">
-    <link rel="stylesheet" href="vendors/jqvmap/dist/jqvmap.min.css">
+    <link rel="stylesheet" href="/vendors/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/vendors/themify-icons/css/themify-icons.css">
+    <link rel="stylesheet" href="/vendors/flag-icon-css/css/flag-icon.min.css">
+    <link rel="stylesheet" href="/vendors/selectFX/css/cs-skin-elastic.css">
+    <link rel="stylesheet" href="/vendors/jqvmap/dist/jqvmap.min.css">
 
 
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800' rel='stylesheet' type='text/css'>
 
@@ -47,8 +47,8 @@
                     aria-controls="main-menu" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="fa fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="./"><img src="images/logo.png" alt="Logo"></a>
-            <a class="navbar-brand hidden" href="./"><img src="images/logo2.png" alt="Logo"></a>
+            <a class="navbar-brand" href="./"><img src="/images/logo.png" alt="Logo"></a>
+            <a class="navbar-brand hidden" href="./"><img src="/images/logo2.png" alt="Logo"></a>
         </div>
 
         <div id="main-menu" class="main-menu collapse navbar-collapse">
@@ -59,10 +59,10 @@
                        aria-expanded="true">
                         <i class="menu-icon fa fa-cogs"></i>Jobs</a>
                     <ul class="sub-menu children dropdown-menu">
-                        <li><i class="fa fa-th"></i><a href="jobs/jobs_todo">Todo</a></li>
-                        <li><i class="fa fa-spinner"></i><a href="jobs_running">Running</a></li>
-                        <li><i class="fa fa-check"></i><a href="jobs_excited">Done</a></li>
-                        <li><i class="fa fa-exclamation-triangle"></i><a href="jobs_error">Errors</a></li>
+                        <li><i class="fa fa-th"></i><a href="/jobs/todo">Todo</a></li>
+                        <li><i class="fa fa-spinner"></i><a href="/jobs/running">Running</a></li>
+                        <li><i class="fa fa-check"></i><a href="/jobs/exited">Done</a></li>
+                        <li><i class="fa fa-exclamation-triangle"></i><a href="/jobs/error">Errors</a></li>
                     </ul>
                 </li>
 
@@ -79,9 +79,17 @@
 
                 </li>
 
+                {% if graphana_url is defined %}
+                <h3 class="menu-title"><i class="menu-icon fa fa-exclamation-triangle"></i> Monitoring</h3>
+                <li>
+                    <a href="{{ graphana_url }}">
+                        <i class="menu-icon fa fa-bomb"></i>Graphana</a>
+                </li>
+                {% endif %}
+
                 <h3 class="menu-title"><i class="menu-icon fa fa-exclamation-triangle"></i> Danger Zone</h3>
                 <li>
-                    <a href="clean">
+                    <a href="/api/clean">
                         <i class="menu-icon fa fa-bomb"></i>Drop jobs DB</a>
                 </li>
             </ul>
@@ -141,18 +149,18 @@
 <!-- Right Panel -->
 
 
-<script src="vendors/jquery/dist/jquery.min.js"></script>
-<script src="vendors/popper.js/dist/umd/popper.min.js"></script>
-<script src="vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="assets/js/main.js"></script>
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<script src="/vendors/popper.js/dist/umd/popper.min.js"></script>
+<script src="/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/assets/js/main.js"></script>
 
 
-<script src="vendors/chart.js/dist/Chart.bundle.min.js"></script>
-<script src="assets/js/dashboard.js"></script>
-<script src="assets/js/widgets.js"></script>
-<script src="vendors/jqvmap/dist/jquery.vmap.min.js"></script>
-<script src="vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
-<script src="vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+<script src="/vendors/chart.js/dist/Chart.bundle.min.js"></script>
+<script src="/assets/js/dashboard.js"></script>
+<script src="/assets/js/widgets.js"></script>
+<script src="/vendors/jqvmap/dist/jquery.vmap.min.js"></script>
+<script src="/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
+<script src="/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
 <script>
     (function ($) {
         "use strict";

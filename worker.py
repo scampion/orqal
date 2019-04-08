@@ -9,6 +9,7 @@ import datetime
 import inspect
 import logging
 import os
+import random
 import sys
 import threading
 import time
@@ -40,6 +41,7 @@ class Job(madlab.Job):
     def __init__(self, id=None, app=None, input=None, params={}, start=False):
         super().__init__(id, app, input, params, start)
         self.wd = os.path.join(conf.jobs_dir, str(self._id))
+        self.inspect = None
 
     def parse_logs(self, c):
         stdout = c.logs(stdout=True, stderr=False)
@@ -53,7 +55,7 @@ class Job(madlab.Job):
             self.stderr.append(l)
             self.save()
 
-    def run(self, c):
+    def run(self, api, c):
         try:
             while c and c.status in ["running", "created"]:
                 self.status(c.status)
@@ -65,6 +67,7 @@ class Job(madlab.Job):
             log.error(e)
             self.status("error")
         finally:
+            self.inspect = api.inspect_container(c.id)
             c.remove()
 
     def save(self):
@@ -81,13 +84,13 @@ class Job(madlab.Job):
         self.__dict__.update(data)
 
 
-def worker(j, host, model):
+def worker(j, d):
     log.info("Thread start : %s", j)
     for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             log.info("Run %s %s", name, obj)
             try:
-                obj(j).run(host, model)
+                obj(j).run(d)
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
                 j.stderr.append(str(e))
@@ -99,11 +102,14 @@ def app_limit(j):
     for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             return obj(j).threads, obj(j).memory_in_gb
+    return None, None
 
 
 def host_fit(j):
     threads_needed, memory_needed = app_limit(j)
-    for d in dockers.values():
+    docker_hosts = list(dockers.values())
+    random.shuffle(docker_hosts)
+    for d in docker_hosts:
         api = d['api']
         m = d['model']
         cpu_needed = threads_needed * 10 ** 9 / m['threads'] if threads_needed else 10 ** 9
@@ -113,10 +119,9 @@ def host_fit(j):
         mem_avai = m['memory_in_gb'] * 10 ** 9 - mem_used
         cpu_avai = 10 ** 9 - cpu_used
         log.debug("best fit called for job %s:%s : %03d %03d - available %03d %03d",
-                  j.app, j._id, memory_needed, threads_needed, mem_avai, cpu_avai)
+                  j.app, j._id, memory_needed, cpu_needed, mem_avai, cpu_avai)
         if mem_avai >= memory_needed and cpu_avai >= cpu_needed:
-            return d['docker'], d['model']
-    return None, None
+            return d
 
 
 def main():
@@ -126,10 +131,10 @@ def main():
             id_ = r['_id']
             j = Job(id_)
             log.debug("Job to launch %s", j)
-            host, model = host_fit(j)
-            if host and model:
+            d = host_fit(j)
+            if d:
                 j.status('init')
-                t = threading.Thread(target=worker, args=(j, host, model))
+                t = threading.Thread(target=worker, args=(j, d))
                 threads[id_] = t
                 t.start()
             else:

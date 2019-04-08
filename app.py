@@ -3,6 +3,7 @@ import datetime
 import inspect
 import json
 import os
+import re
 import sys
 
 import aiohttp_jinja2 as aiohttp_jinja2
@@ -11,7 +12,7 @@ import docker
 import jinja2
 import logging
 from aiohttp import web
-from bson import ObjectId
+from bson import ObjectId, json_util
 from bson.json_util import dumps
 from pymongo import MongoClient
 
@@ -24,27 +25,26 @@ routes = web.RouteTableDef()
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('madlab')
 
-
 # HTML
 ########################################################################################################################
 @routes.get('/')
 @aiohttp_jinja2.template('index.html')
 async def index(request):
-    return {}
-
+    return {"graphana_url": conf.graphana_url}
 
 @routes.get('/doc')
 @aiohttp_jinja2.template('doc.html')
 async def doc(request):
-    return {}
+    return {"graphana_url": conf.graphana_url}
 
 
-@routes.get('/jobs_{status}')
+@routes.get('/jobs/{status}')
 @aiohttp_jinja2.template('jobs.html')
 async def jobs_status(request):
     status = request.match_info.get('status')
     jobs = list(mongo.madlab.jobs.find({'current_status': status}))
-    headers = sorted(jobs[0].keys())
+    headers = ['_id', 'ctime', 'current_status', 'host', 'image', 'input', 'wd']
+    # headers = sorted(jobs[0].keys())
     logs = [[j[key] for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
 
@@ -248,6 +248,7 @@ async def jobs_status(request):
     def load_metrics():
         for h, m in conf.docker_hosts.items():
             s = list(inspects(h))
+            print([v['HostConfig']['Memory'] for v in s])
             mem_used = sum(v['HostConfig']['Memory'] for v in s)
             cpu_used = sum(v['HostConfig']['NanoCpus'] for v in s)
             images = collections.Counter([v['Config']['Image'] for v in s])
@@ -265,7 +266,7 @@ async def clean(request):
     summary:  Drop all jobs
     """
     mongo.madlab.jobs.delete_many({})
-    return web.Response(status=200)
+    return web.Response(text='done', status=200)
 
 
 @routes.get('/api/status', allow_head=False)
@@ -326,4 +327,4 @@ setup_swagger(app,
               contact="madlab@inria.fr")
 
 if __name__ == '__main__':
-    web.run_app(app, port=5000)
+    web.run_app(app, port=5001)

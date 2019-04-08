@@ -66,7 +66,7 @@
 
         <div id="template" class="card" style="display: none">
             <div class="card-header">
-                <h4>host:1234</h4>
+                <h5>host:1234</h5>
             </div>
             <div class="card-body">
                 <p class="muted" id="images">
@@ -111,26 +111,24 @@
 
                 // Display load
                 $.get("/api/load", function (data) {
-                    console.log(data);
                     data.forEach(function(element) {
-                        console.log(element[0]);
-                        var node = $("#template");
-                        node.children("div").first().children('h4').text(Object.keys(element)[0]);
+                        console.log(element);
+                        var node = $("#template").clone();
+                        // node.children("div").first().children('h3').text(Object.keys(element)[0]);
+                        node.find("h5").text(Object.keys(element)[0]);
                         var values = element[Object.keys(element)[0]];
                         for (const [key, value] of Object.entries(values['images'])) {
                            node.find("#images").append(key + ' <span class="badge badge-primary">' + value + '</span>');
                            node.find("#images").append('<br>');
                         }
-                        node.find("#memory").css('width', Math.round(values.mem * 100) + '%');
-                        node.find("#memory").text("Memory " +  Math.round(values.mem * 100) + '%')
+                        node.find("#memory").css('width', Math.round(values.mem) + '%');
+                        node.find("#memory").text("Memory " +  Math.round(values.mem) + '%')
                         node.find("#cpu").css('width', Math.round(values.cpu) + '%');
                         node.find("#cpu").text("CPU " +  Math.round(values.cpu) + '%')
-                        console.log(Math.round(values.mem * 100))
                         node.show();
-                        $("#container").append(node.html());
+                        $("#load").append(node.html());
 }                   );
                 });
-
 
             });
 

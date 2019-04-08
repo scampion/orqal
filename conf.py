@@ -6,3 +6,4 @@ docker_api_version = '1.37'
 auth_config = {'username': 'scampion',
                'password': '65sX2-9sSXSp-hs-XeZ8'}
 jobs_dir = "/scratch/jobs"
+graphana_url = "http://madlab.irisa.fr:3000/dashboard/db/docker-and-system-monitoring"

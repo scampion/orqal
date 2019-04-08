@@ -15,7 +15,11 @@
         {% for j in logs %}
         <tr>
             {% for v in j %}
-            <td>{{ v }}</td>
+                {% if loop.index == 1 %}
+                    <td><a href="/api/job/{{v}}">{{ v }}</a></td>
+                {% else %}
+                    <td>{{ v }}</td>
+                {% endif %}
             {% endfor %}
         </tr>
         {% endfor %}

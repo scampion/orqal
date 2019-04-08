@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="content mt-3">
+    <div id="json-container">
+        <pre id="json-viewer"></pre>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+    <link href="/assets/css/jquery.json-viewer.css" rel="stylesheet" type="text/css">
+    <script src="/assets/js/jquery.json-viewer.js"></script>
+
+    <script type="text/javascript">
+        (function ($) {
+            "use strict"; // Start of use strict
+
+            $(document).ready(function () {
+                var data = {{ data | tojson| safe }};
+                $('#json-viewer').json_viewer(data);
+            });
+
+        })(jQuery);
+    </script>
+{% endblock %}
+
