@@ -100,7 +100,7 @@ def worker(j, d):
 def app_limit(j):
     for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
-            return obj(j).threads, obj(j).memory_in_gb
+            return obj(j).threads, obj(j).memory_in_gb * 10 ** 9
     return None, None
 
 
