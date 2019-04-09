@@ -48,7 +48,7 @@ async def jobs_status(request):
     jobs = list(mongo.madlab.jobs.find({'current_status': status}))
     headers = ['_id', 'ctime', 'current_status', 'host', 'image', 'input', 'wd']
     # headers = sorted(jobs[0].keys())
-    logs = [[j[key] for key in headers] for j in jobs]
+    logs = [[j.get(key, '') for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
 
 
