@@ -58,7 +58,7 @@ class Job(madlab.Job):
         try:
             while c and c.status in ["running", "created"]:
                 self.status(c.status)
-                time.sleep(1)
+                time.sleep(10)
                 c.reload()
             self.status(c.status)
             self.parse_logs(c)
