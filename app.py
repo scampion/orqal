@@ -1,4 +1,5 @@
 import collections
+import concurrent
 import datetime
 import inspect
 import json
@@ -25,12 +26,14 @@ routes = web.RouteTableDef()
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('madlab')
 
+
 # HTML
 ########################################################################################################################
 @routes.get('/')
 @aiohttp_jinja2.template('index.html')
 async def index(request):
     return {"graphana_url": conf.graphana_url}
+
 
 @routes.get('/doc')
 @aiohttp_jinja2.template('doc.html')
@@ -237,24 +240,29 @@ async def jobs_status(request):
                             type: integer
                             description: number of container currently running
     """
-    def inspects(h):  # if container is removed during the request pass exception
-        api = docker.APIClient(base_url=h, version=conf.docker_api_version)
-        for c in api.containers():
-            try:
-                yield dict(api.inspect_container(c))
-            except Exception:
-                pass
 
     def load_metrics():
-        for h, m in conf.docker_hosts.items():
-            s = list(inspects(h))
-            print([v['HostConfig']['Memory'] for v in s])
-            mem_used = sum(v['HostConfig']['Memory'] for v in s)
-            cpu_used = sum(v['HostConfig']['NanoCpus'] for v in s)
-            images = collections.Counter([v['Config']['Image'] for v in s])
-            yield {h: {'mem': (mem_used / 10 ** 9 * 100.0 / m['memory_in_gb']),
-                       "cpu": cpu_used / 10 ** 9 * 100.0,
-                       'images': images}}
+        for h in conf.docker_hosts:
+            cpu_used = 0
+            mem_used = 0
+            images = []
+            client = docker.DockerClient(base_url=h, version=conf.docker_api_version)
+            mem_total = client.info()['MemTotal']
+            # docker stats need 1 second to collect stats we // that
+            with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+                images.extend([''.join(c.attrs['Config']["Image"]) for c in client.containers.list()])
+                future_to_stats = {executor.submit(c.stats, stream=False): c for c in client.containers.list()}
+                for future in concurrent.futures.as_completed(future_to_stats):
+                    try:
+                        stat = future.result()
+                        cpu_used += stat['precpu_stats']['cpu_usage']['total_usage'] / stat['precpu_stats'][
+                            'system_cpu_usage'] * 100
+                        mem_used += stat['memory_stats']['usage']
+                    except Exception as exc:
+                        log.error(exc)
+            yield {h: {'mem': mem_used / mem_total,
+                       "cpu": cpu_used,
+                       'images': collections.Counter(images)}}
 
     return web.json_response(list(load_metrics()))
 
@@ -263,9 +271,32 @@ async def jobs_status(request):
 async def clean(request):
     """
     ---
-    summary:  Drop all jobs
+    summary:  Drop all jobs in db and all containers in the cluster
     """
+
+    def containers_to_kill(client):
+        for c in client.containers.list():
+            if conf.protected_containers and c.name in conf.protected_containers:
+                continue
+            else:
+                yield c
+
+    def kill_and_remove(c):
+        c.kill()
+        c.remove()
+
     mongo.madlab.jobs.delete_many({})
+    for h in conf.docker_hosts:
+        client = docker.DockerClient(base_url=h, version=conf.docker_api_version)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+            future_to_stats = {executor.submit(kill_and_remove, c): c for c in containers_to_kill(client)}
+            for future in concurrent.futures.as_completed(future_to_stats):
+                try:
+                    future.result()
+                except Exception as exc:
+                    log.error(exc)
+
     return web.Response(text='done', status=200)
 
 
