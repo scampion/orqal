@@ -38,11 +38,12 @@ class AbstractWorker:
         self.job.host = client.api.base_url
         self.job.image = self.docker_url + ':' + tag
         self.job.cmd = cmd
+        name = "%s_%s" % (self.docker_url.split('/')[-1], self.job._id)
         self.job.run(docker['api'],
                      client.containers.run(self.docker_url + ':' + tag,
                                            cmd, mem_limit=mem_limit, nano_cpus=nano_cpus,
                                            volumes=self.volumes, working_dir=self.job.wd,
-                                           detach=True, auto_remove=False, name="%s_%s" % (self.job.image, self.job._id)))
+                                           detach=True, auto_remove=False, name=name))
 
         self.set_result(self.job)
 
