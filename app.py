@@ -229,10 +229,10 @@ async def jobs_status(request):
                     properties:
                       mem:
                         type: number
-                        description: memory load between 0 and 1
+                        description: memory load scheduled between 0 and 1
                       cpu:
                         type: number
-                        description: cpu load between 0 and 1
+                        description: cpu load scheduled between 0 and 1
                       images:
                         type: object
                         properties:

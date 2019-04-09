@@ -125,7 +125,6 @@ def host_fit(j):
 
 
 def main():
-    threads = {}
     while True:
         for r in client.madlab.jobs.find({'current_status': None}):
             id_ = r['_id']
@@ -134,13 +133,10 @@ def main():
             d = host_fit(j)
             if d:
                 j.status('init')
-                t = threading.Thread(target=worker, args=(j, d))
-                threads[id_] = t
-                t.start()
+                threading.Thread(target=worker, args=(j, d)).start()
+                time.sleep(1)  # in order to retrieve stats
             else:
                 log.debug("No ressource available for job %s", j)
-            # if len(threads) > conf.max_threads:
-            # time.sleep(5)
         print('Wait ...')
         time.sleep(5)
 
