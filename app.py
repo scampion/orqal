@@ -353,7 +353,7 @@ async def status(request):
 
     dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api_version),
                    'api': docker.APIClient(base_url=h, version=conf.docker_api_version)
-                   } for h in conf.docker_hosts.items()}
+                   } for h in conf.docker_hosts}
 
     status_list = mongo.db.jobs.find().distinct('current_status')
     status = {s: mongo.db.jobs.find({'current_status': s}).count() for s in status_list}

@@ -11,6 +11,7 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('madlab')
 log.setLevel(logging.DEBUG)
 
+services = []
 try:
     services = requests.get(MADLAB_API_URL + "/status").json()['_services']
 except Exception as e:
