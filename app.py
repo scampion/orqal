@@ -31,19 +31,19 @@ log = logging.getLogger('madlab')
 ########################################################################################################################
 @routes.get('/')
 @aiohttp_jinja2.template('index.html')
-async def index(request):
+async def html_index(request):
     return {"graphana_url": conf.graphana_url}
 
 
 @routes.get('/doc')
 @aiohttp_jinja2.template('doc.html')
-async def doc(request):
+async def html_doc(request):
     return {"graphana_url": conf.graphana_url}
 
 
 @routes.get('/jobs/{status}')
 @aiohttp_jinja2.template('jobs.html')
-async def jobs_status(request):
+async def html_jobs_status(request):
     status = request.match_info.get('status')
     jobs = list(mongo.madlab.jobs.find({'current_status': status}))
     headers = ['_id', 'ctime', 'current_status', 'host', 'image', 'input', 'wd']
@@ -55,7 +55,7 @@ async def jobs_status(request):
 # API
 ########################################################################################################################
 @routes.get('/api/job/{id}', allow_head=False)
-async def get_job(request):
+async def job_get(request):
     """
     ---
     summary:  Retrieve job informations
@@ -82,7 +82,7 @@ async def get_job(request):
 
 
 @routes.post('/api/job')
-async def create_job(request):
+async def job_post(request):
     """
     ---
     summary:  Create a job
@@ -119,7 +119,7 @@ async def create_job(request):
 
 
 @routes.get('/api/jobs/status', allow_head=False)
-async def get_status(request):
+async def jobs_status(request):
     """
     ---
     summary:  Retrieve counters of job per status
@@ -206,7 +206,7 @@ async def batch(request):
 
 
 @routes.get('/api/load', allow_head=False)
-async def jobs_status(request):
+async def load(request):
     """
     ---
     summary:  Retrieve load of cluster nodes
