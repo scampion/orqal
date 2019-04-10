@@ -26,8 +26,10 @@ def wait(jobs):
         time.sleep(1)
 
 
-def batch(jobs):
+def batch(jobs, name=None):
     url = MADLAB_API_URL + "/batch"
+    if name:
+        url += "/" + name
     gen_jobs = (json.dumps(j.__dict__).encode('utf-8') for j in jobs)
     return [Job(id=c.hex()) for c in requests.post(url, data=gen_jobs, stream=True).iter_content(chunk_size=12)]
     # nb: ObjectId is a 12-byte unique identifier

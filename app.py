@@ -178,17 +178,27 @@ async def download_job_file(request):
 
 
 @routes.post('/api/batch')
-async def batch(request):
+@routes.post('/api/batch/{id}')
+async def batch_post(request):
     """
     ---
     summary:  Speed up batch submission
     description: Reduce http transfert receive an http stream Transfer-Encoding chunked of json.
+    parameters:
+    - in: id
+      name: id
+      schema:
+        type: string
+      required: false
+      description: a batch identifier (if already exist is overwrited)
     produces:
     - application/octet-stream
     responses:
         "200":
           description: response another http stream with object id bson encoded on 12 bytes when job is inserted
     """
+    batch_id = request.match_info.get('id', None)
+    jobs = []
     resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
     await resp.prepare(request)
     buffer = b''
@@ -201,8 +211,35 @@ async def batch(request):
             _id = mongo.madlab.jobs.insert(data)
             log.debug("batch %s %s %s", _id, data['input'], data['app'])
             await resp.write(_id.binary)
+            jobs.append(_id)
             buffer = b''
+    if batch_id:
+        mongo.madlab.batch.insert({'_id': batch_id, 'jobs': jobs})
     return resp
+
+
+@routes.get('/api/batch/{id}')
+async def batch_get(request):
+    """
+    ---
+    summary:  Retrieve job per batch identifier
+    parameters:
+    - in: id
+      name: id
+      schema:
+        type: string
+      required: true
+      description: a batch identifier
+
+    produces:
+    - application/json
+    responses:
+        "200":
+          description: response a jobs identifier array
+    """
+    batch_id = request.match_info.get('id')
+    data = mongo.madlab.batch.find({'_id': batch_id})
+    return web.Response(body=dumps(data), content_type='application/json')
 
 
 @routes.get('/api/load', allow_head=False)
