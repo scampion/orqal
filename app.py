@@ -46,8 +46,7 @@ async def html_doc(request):
 async def html_jobs_status(request):
     status = request.match_info.get('status')
     jobs = list(mongo.madlab.jobs.find({'current_status': status}))
-    headers = ['_id', 'ctime', 'current_status', 'host', 'image', 'input', 'wd']
-    # headers = sorted(jobs[0].keys())
+    headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
 
@@ -240,6 +239,49 @@ async def batch_get(request):
     batch_id = request.match_info.get('id')
     data = mongo.madlab.batch.find({'_id': batch_id})
     return web.Response(body=dumps(data), content_type='application/json')
+
+
+@routes.get('/api/stream/http://{host}/{id}')
+async def stream_get(request):
+    """
+    ---
+    summary:  Retrieve log stream from container id
+    parameters:
+    - in: path
+      name: host
+      schema:
+        type: string
+      required: true
+      description: a host ip
+    - in: path
+      name: id
+      schema:
+        type: string
+      required: true
+      description: a container identifier
+
+    produces:
+    - text/plain
+    responses:
+        "200":
+          description: stream from container logs
+    """
+    host = request.match_info.get('host')
+    id = request.match_info.get('id')
+    client = docker.DockerClient(base_url=host, version=conf.docker_api_version)
+
+    if id not in [c.id for c in client.containers.list()]:
+        return web.Response(status=404)
+    container = client.containers.get(id)
+
+    resp = web.StreamResponse(status=200,
+                              reason='OK',
+                              headers={'Content-Type': 'text/plain'})
+    await resp.prepare(request)
+    for log in container.attach(stdout=True, stderr=True, logs=True, stream=True):
+        await resp.write(log)
+    await resp.write_eof()
+    return resp
 
 
 @routes.get('/api/load', allow_head=False)

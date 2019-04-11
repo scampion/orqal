@@ -41,6 +41,7 @@ class Job(madlab.Job):
         super().__init__(id, app, input, params, start)
         self.wd = os.path.join(conf.jobs_dir, str(self._id))
         self.inspect = None
+        self.container_id = None
 
     def parse_logs(self, c):
         stdout = c.logs(stdout=True, stderr=False)
@@ -55,6 +56,8 @@ class Job(madlab.Job):
             self.save()
 
     def run(self, api, c):
+        self.container_id = c.id
+        self.save()
         try:
             while c and c.status in ["running", "created"]:
                 self.status(c.status)
@@ -67,6 +70,8 @@ class Job(madlab.Job):
             self.status("error")
         finally:
             self.inspect = api.inspect_container(c.id)
+            self.save()
+            logging.debug("inspect results : %s", self.inspect)
             c.remove()
 
     def save(self):

@@ -6,6 +6,7 @@
     <table class="table table-striped">
         <thead>
         <tr>
+            <th scope="col"> stream </th>
             {% for k in headers %}
             <th scope="col">{{ k }}</th>
             {% endfor %}
@@ -14,6 +15,7 @@
         <tbody>
         {% for j in logs %}
         <tr>
+        <td><a href="/api/stream/{{ j[headers.index('host')] }}/{{ j[headers.index('container_id')] }}"> logs </a></td>
             {% for v in j %}
                 {% if loop.index == 1 %}
                     <td><a href="/api/job/{{v}}">{{ v }}</a></td>
