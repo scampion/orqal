@@ -292,8 +292,10 @@ async def load(request):
                 for future in concurrent.futures.as_completed(future_to_stats):
                     try:
                         stat = future.result()
-                        cpu_used += stat['precpu_stats']['cpu_usage']['total_usage'] / stat['precpu_stats'][
-                            'system_cpu_usage'] * 100
+                        cpu_delta = stat['cpu_stats']['cpu_usage']['total_usage'] - stat['precpu_stats']['cpu_usage']['total_usage']
+                        sys_delta = stat['cpu_stats']['system_cpu_usage'] - stat['precpu_stats']['system_cpu_usage']
+                        if cpu_delta > 0 and sys_delta > 0:
+                            cpu_used += cpu_delta / sys_delta * 100.0
                         mem_used += stat['memory_stats']['usage']
                     except Exception as exc:
                         log.error(exc)

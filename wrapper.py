@@ -32,7 +32,7 @@ class AbstractWorker:
         self.log.debug("Pull image %s", self.docker_url)
         client.images.pull(self.docker_url, tag, auth_config=conf.auth_config)
         mem_limit = int(self.memory_in_gb * 10 ** 9 if self.memory_in_gb else client.info()['MemTotal'])
-        nano_cpus = int(10 ** 9 / client.info()['NCPU'] * self.threads if self.threads else 10 ** 9)
+        cpu_count = self.threads if self.threads  else client.info()['NCPU']
         cmd = self.get_cmd(self.job.params.get('app', None))
         self.job.host = client.api.base_url
         self.job.image = self.docker_url + ':' + tag
@@ -40,7 +40,7 @@ class AbstractWorker:
         name = "%s_%s" % (self.docker_url.split('/')[-1], self.job._id)
         self.job.run(docker['api'],
                      client.containers.run(self.docker_url + ':' + tag,
-                                           cmd, mem_limit=mem_limit, nano_cpus=nano_cpus,
+                                           cmd, mem_limit=mem_limit, cpu_count=cpu_count,
                                            volumes=self.volumes, working_dir=self.job.wd,
                                            detach=True, auto_remove=False, name=name))
 
