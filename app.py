@@ -330,7 +330,13 @@ async def clean(request):
         c.kill()
         c.remove()
 
-    mongo.madlab.jobs.delete_many({})
+    action = request.match_info.get('action')
+    if action == 'all':
+        mongo.madlab.jobs.delete_many({})
+    elif action == 'scheduled':
+        mongo.madlab.jobs.delete_many({'current_status': {'$ne': 'exited'}})
+    else:
+        web.Response(text='action in path needed', status=500)
     for h in conf.docker_hosts:
         client = docker.DockerClient(base_url=h, version=conf.docker_api_version)
 
