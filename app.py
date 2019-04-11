@@ -299,7 +299,7 @@ async def load(request):
                         mem_used += stat['memory_stats']['usage']
                     except Exception as exc:
                         log.error(exc)
-            yield {h: {'mem': mem_used / mem_total,
+            yield {h: {'mem': mem_used / mem_total * 100.0,
                        "cpu": cpu_used,
                        'images': collections.Counter(images)}}
 
