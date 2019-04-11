@@ -209,12 +209,12 @@ async def batch_post(request):
             del data['_id']
             data['ctime'] = datetime.datetime.now()
             _id = mongo.madlab.jobs.insert(data)
-            log.debug("batch %s %s %s", _id, data['input'], data['app'])
-            await resp.write(_id.binary)
             jobs.append(_id)
+            await resp.write(_id.binary)
+            log.debug("batch %s %s %s", _id, data['input'], data['app'])
             buffer = b''
     if batch_id:
-        mongo.madlab.batch.insert({'_id': batch_id, 'jobs': jobs})
+        mongo.madlab.batch.update({'_id': batch_id}, {'$set': {'jobs': jobs}}, upsert=True)
     return resp
 
 
