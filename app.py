@@ -224,7 +224,7 @@ async def batch_get(request):
     ---
     summary:  Retrieve job per batch identifier
     parameters:
-    - in: id
+    - in: path
       name: id
       schema:
         type: string
@@ -304,13 +304,19 @@ async def load(request):
     return web.json_response(list(load_metrics()))
 
 
-@routes.get('/api/clean', allow_head=False)
+@routes.get('/api/clean/{action}', allow_head=False)
 async def clean(request):
     """
     ---
     summary:  Drop all jobs in db and all containers in the cluster
+    parameters:
+    - in: path
+      name: action
+      schema:
+        type: string
+      required: true
+      description: action all: remove all jobs + containers / scheduled: remove job execpt exited + containers
     """
-
     def containers_to_kill(client):
         for c in client.containers.list():
             if conf.protected_containers and c.name in conf.protected_containers:
