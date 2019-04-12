@@ -334,7 +334,8 @@ async def load(request):
                 for future in concurrent.futures.as_completed(future_to_stats):
                     try:
                         stat = future.result()
-                        cpu_delta = stat['cpu_stats']['cpu_usage']['total_usage'] - stat['precpu_stats']['cpu_usage']['total_usage']
+                        cpu_delta = stat['cpu_stats']['cpu_usage']['total_usage'] - stat['precpu_stats']['cpu_usage'][
+                            'total_usage']
                         sys_delta = stat['cpu_stats']['system_cpu_usage'] - stat['precpu_stats']['system_cpu_usage']
                         if cpu_delta > 0 and sys_delta > 0:
                             cpu_used += cpu_delta / sys_delta * 100.0
@@ -361,6 +362,7 @@ async def clean(request):
       required: true
       description: action all: remove all jobs + containers / scheduled: remove job execpt exited + containers
     """
+
     def containers_to_kill(client):
         for c in client.containers.list():
             if conf.protected_containers and c.name in conf.protected_containers:

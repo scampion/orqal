@@ -1,10 +1,11 @@
+import getpass
 import json
 import logging
 import os
 import time
 import requests
 
-__version__ = '0.0.2'
+__version__ = '0.0.4'
 MADLAB_API_URL = os.environ.get("MADLAB_API_URL", "http://madlab.irisa.fr:5001/api")
 
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -43,6 +44,7 @@ class Job:
         self.app = app
         self.input = input
         self.params = params
+        self.user = getpass.getuser()
         self.current_status = None
         self.container = None
         self.stdout = []
