@@ -20,9 +20,9 @@ except Exception as e:
 
 
 def wait(jobs):
-    in_progress = jobs
+    in_progress = jobs.copy()
     while in_progress:
-        for j in jobs:
+        for j in in_progress:
             if j.load() in ['exited', 'error']:
                 in_progress.remove(j)
         time.sleep(1)
