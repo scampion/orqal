@@ -1,12 +1,5 @@
-"""
-Malware Analysis Detection Laboratory
-
-This server scan job order and run it on our cluster (21 nodes, 16TB)
-
-Stay tuned with the mailing list : madlab@inria.fr
-"""
-import datetime
 import inspect
+import json
 import logging
 import os
 import random
@@ -18,7 +11,7 @@ import traceback
 import docker
 
 import conf
-import madlab
+import orqal
 import wrapper
 
 from pymongo import MongoClient
@@ -32,10 +25,10 @@ dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)
 
-log = logging.getLogger('madlab')
+log = logging.getLogger('orqal')
 
 
-class Job(madlab.Job):
+class Job(orqal.Job):
 
     def __init__(self, id=None, app=None, input=None, params={}, start=False):
         super().__init__(id, app, input, params, start)
@@ -77,15 +70,57 @@ class Job(madlab.Job):
     def save(self):
         d = self.__dict__.copy()
         del d['container']
-        client.madlab.jobs.replace_one({'_id': self._id}, d)
+        client.orqal.jobs.replace_one({'_id': self._id}, d)
 
     def set_result(self, data):
         self.result = data
         self.save()
 
     def load(self):
-        data = client.madlab.jobs.find_one({'_id': self._id})
+        data = client.orqal.jobs.find_one({'_id': self._id})
         self.__dict__.update(data)
+
+
+class AbstractWorker:
+    docker_url = None
+    volumes = None
+    volumes = {'/scratch': {'bind': '/scratch', 'mode': 'rw'},
+               '/database': {'bind': '/database', 'mode': 'ro'}}
+
+    threads = None  # mean take all cores available on host by default
+    memory_in_gb = None  # idem for memory
+    create_dir = False
+
+    def __init__(self, job):
+        self.log = logging.getLogger(str(self.__class__))
+        self.job = job
+        if self.create_dir and not os.path.exists(self.job.wd):
+            self.setup_dir()
+
+    def setup_dir(self):
+        os.mkdir(self.job.wd, 0o777)
+        os.chmod(self.job.wd, 0o777)  # strange behaviour due to nfs ? we must set permission after
+        with open(os.path.join(self.job.wd, 'params.json'), 'w') as f:
+            json.dump(self.job.params, f)
+
+    def run(self, docker, tag='latest'):
+        client = docker['docker']
+        self.log.debug("Pull image %s", self.docker_url)
+        client.images.pull(self.docker_url, tag, auth_config=conf.auth_config)
+        mem_limit = int(self.memory_in_gb * 10 ** 9 if self.memory_in_gb else client.info()['MemTotal'])
+        cpu_count = self.threads if self.threads else client.info()['NCPU']
+        cmd = self.get_cmd(self.job.params.get('app', None))
+        self.job.host = client.api.base_url
+        self.job.image = self.docker_url + ':' + tag
+        self.job.cmd = cmd
+        name = "%s_%s" % (self.docker_url.split('/')[-1], self.job._id)
+        self.job.run(docker['api'],
+                     client.containers.run(self.docker_url + ':' + tag,
+                                           cmd, mem_limit=mem_limit, cpu_count=cpu_count,
+                                           volumes=self.volumes, working_dir=self.job.wd,
+                                           detach=True, auto_remove=False, name=name))
+
+        self.set_result(self.job)
 
 
 def worker(j, d):
@@ -130,7 +165,7 @@ def host_fit(j):
 
 def main():
     while True:
-        for r in client.madlab.jobs.find({'current_status': None}):
+        for r in client.orqal.jobs.find({'current_status': None}):
             id_ = r['_id']
             j = Job(id_)
             log.debug("Job to launch %s", j)

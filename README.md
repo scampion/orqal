@@ -1,4 +1,5 @@
-![](./static/images/orqal.svg) Simple batch scheduler for docker cluster.
+![](./static/images/orqal.svg) Simple batch scheduler for docker cluster which can be used remotly and 
+without overhead in scientific experiment.
 
 ## 📐 Design
 
@@ -64,15 +65,13 @@ A docker-compose file can be used as receipe to install it.
 ```
 
 
-
-
 ### How to open api port on docker:
 
 Add in file `/etc/systemd/system/docker.service.d/override.conf`
 
     [Service]
     ExecStart=
-    ExecStart=/usr/bin/docker daemon -H fd://  -H tcp://0.0.0.0:2376 -s overlay --insecure-registry madlab:5000
+    ExecStart=/usr/bin/docker daemon -H fd://  -H tcp://0.0.0.0:2376 -s overlay --insecure-registry orqal:5000
     
 
 Then flush changes by executing :
