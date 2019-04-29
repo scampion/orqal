@@ -1,4 +1,6 @@
-![](./static/images/orqal.svg) Simple batch scheduler for docker cluster which can be used remotly and without overhead in scientific experiment.
+![](./static/images/orqal.svg) 
+
+Simple batch scheduler for docker cluster which can be used remotly and without overhead in scientific experiment.
 
 ## 📐 Design
 
@@ -63,6 +65,15 @@ A docker-compose file can be used as receipe to install it.
    twine upload dist/*
 ```
 
+### Licence
+
+GNU AFFERO GENERAL PUBLIC LICENSE
+https://www.gnu.org/licenses/agpl-3.0.txt
+
+### Credits 
+
+- Dashboard template : https://github.com/puikinsh/sufee-admin-dashboard
+- Font : https://fonts.google.com/specimen/Righteous
 
 ### How to open api port on docker:
 
