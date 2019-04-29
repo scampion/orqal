@@ -47,12 +47,13 @@ A docker-compose file can be used as receipe to install it.
 
 ## Run 
 
-###1 - Web process 
+1 - Web process
 
     gunicorn app:app --bind 0.0.0.0:5001 --worker-class aiohttp.GunicornWebWorker  --workers 8
 
 
-###2 - Worker 
+2 - Worker 
+
 	python3 worker.py 
 	
 
