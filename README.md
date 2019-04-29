@@ -1,6 +1,6 @@
 ![](./static/images/orqal.svg) 
 
-Simple batch scheduler for docker cluster which can be used remotly and without overhead in scientific experiment.
+Orqal for [ORQ]chestration of [AL]gorithms is a simple batch scheduler for docker cluster which can be used remotly and without overhead in scientific experiment.
 
 ## 📐 Design
 
