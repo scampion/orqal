@@ -1,5 +1,4 @@
-![](./static/images/orqal.svg) Simple batch scheduler for docker cluster which can be used remotly and 
-without overhead in scientific experiment.
+![](./static/images/orqal.svg) Simple batch scheduler for docker cluster which can be used remotly and without overhead in scientific experiment.
 
 ## 📐 Design
 
