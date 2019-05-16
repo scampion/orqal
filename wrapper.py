@@ -67,7 +67,7 @@ class SCDG(AbstractWorker):
     create_dir = True
 
     def get_cmd(self, params):
-        return "python /code/src/interfaces/cli.py %s params.json" % self.job.input
+        return "python /code/src/interfaces/cli.py %s params.json -o calls.json" % self.job.input
 
     def set_result(self, job):
         pass
