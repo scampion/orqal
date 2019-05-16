@@ -46,8 +46,7 @@ async def html_doc(request):
 async def html_jobs_status(request):
     status = request.match_info.get('status')
     jobs = list(mongo.madlab.jobs.find({'current_status': status}))
-    headers = ['_id', 'ctime', 'current_status', 'host', 'image', 'input', 'wd']
-    # headers = sorted(jobs[0].keys())
+    headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
 
@@ -209,12 +208,12 @@ async def batch_post(request):
             del data['_id']
             data['ctime'] = datetime.datetime.now()
             _id = mongo.madlab.jobs.insert(data)
-            log.debug("batch %s %s %s", _id, data['input'], data['app'])
-            await resp.write(_id.binary)
             jobs.append(_id)
+            await resp.write(_id.binary)
+            log.debug("batch %s %s %s", _id, data['input'], data['app'])
             buffer = b''
     if batch_id:
-        mongo.madlab.batch.insert({'_id': batch_id, 'jobs': jobs})
+        mongo.madlab.batch.update({'_id': batch_id}, {'$set': {'jobs': jobs}}, upsert=True)
     return resp
 
 
@@ -224,7 +223,7 @@ async def batch_get(request):
     ---
     summary:  Retrieve job per batch identifier
     parameters:
-    - in: id
+    - in: path
       name: id
       schema:
         type: string
@@ -240,6 +239,49 @@ async def batch_get(request):
     batch_id = request.match_info.get('id')
     data = mongo.madlab.batch.find({'_id': batch_id})
     return web.Response(body=dumps(data), content_type='application/json')
+
+
+@routes.get('/api/stream/http://{host}/{id}')
+async def stream_get(request):
+    """
+    ---
+    summary:  Retrieve log stream from container id
+    parameters:
+    - in: path
+      name: host
+      schema:
+        type: string
+      required: true
+      description: a host ip
+    - in: path
+      name: id
+      schema:
+        type: string
+      required: true
+      description: a container identifier
+
+    produces:
+    - text/plain
+    responses:
+        "200":
+          description: stream from container logs
+    """
+    host = request.match_info.get('host')
+    id = request.match_info.get('id')
+    client = docker.DockerClient(base_url=host, version=conf.docker_api_version)
+
+    if id not in [c.id for c in client.containers.list()]:
+        return web.Response(status=404)
+    container = client.containers.get(id)
+
+    resp = web.StreamResponse(status=200,
+                              reason='OK',
+                              headers={'Content-Type': 'text/plain'})
+    await resp.prepare(request)
+    for log in container.attach(stdout=True, stderr=True, logs=True, stream=True):
+        await resp.write(log)
+    await resp.write_eof()
+    return resp
 
 
 @routes.get('/api/load', allow_head=False)
@@ -292,23 +334,33 @@ async def load(request):
                 for future in concurrent.futures.as_completed(future_to_stats):
                     try:
                         stat = future.result()
-                        cpu_used += stat['precpu_stats']['cpu_usage']['total_usage'] / stat['precpu_stats'][
-                            'system_cpu_usage'] * 100
+                        cpu_delta = stat['cpu_stats']['cpu_usage']['total_usage'] - stat['precpu_stats']['cpu_usage'][
+                            'total_usage']
+                        sys_delta = stat['cpu_stats']['system_cpu_usage'] - stat['precpu_stats']['system_cpu_usage']
+                        if cpu_delta > 0 and sys_delta > 0:
+                            cpu_used += cpu_delta / sys_delta * 100.0
                         mem_used += stat['memory_stats']['usage']
                     except Exception as exc:
                         log.error(exc)
-            yield {h: {'mem': mem_used / mem_total,
+            yield {h: {'mem': mem_used / mem_total * 100.0,
                        "cpu": cpu_used,
                        'images': collections.Counter(images)}}
 
     return web.json_response(list(load_metrics()))
 
 
-@routes.get('/api/clean', allow_head=False)
+@routes.get('/api/clean/{action}', allow_head=False)
 async def clean(request):
     """
     ---
     summary:  Drop all jobs in db and all containers in the cluster
+    parameters:
+    - in: path
+      name: action
+      schema:
+        type: string
+      required: true
+      description: action all: remove all jobs + containers / scheduled: remove job execpt exited + containers
     """
 
     def containers_to_kill(client):
@@ -322,7 +374,13 @@ async def clean(request):
         c.kill()
         c.remove()
 
-    mongo.madlab.jobs.delete_many({})
+    action = request.match_info.get('action')
+    if action == 'all':
+        mongo.madlab.jobs.delete_many({})
+    elif action == 'scheduled':
+        mongo.madlab.jobs.delete_many({'current_status': {'$ne': 'exited'}})
+    else:
+        web.Response(text='action in path needed', status=500)
     for h in conf.docker_hosts:
         client = docker.DockerClient(base_url=h, version=conf.docker_api_version)
 

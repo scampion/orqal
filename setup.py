@@ -10,6 +10,7 @@ setup(
     author_email="sebastien.campion@inria.fr",
     description="madlab client module",
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python",
