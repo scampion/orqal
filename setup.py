@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
-import madlab
+import orqal
 
 setup(
-    name='madlab',
-    version=madlab.__version__,
+    name='orqal',
+    version=orqal.__version__,
     packages=find_packages(),
     author="Sebastien Campion",
     author_email="sebastien.campion@inria.fr",
-    description="madlab client module",
+    description="orqal client module",
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     include_package_data=True,

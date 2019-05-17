@@ -24,7 +24,7 @@ mongo = MongoClient(conf.mongourl)
 routes = web.RouteTableDef()
 
 logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger('madlab')
+log = logging.getLogger('orqal')
 
 
 # HTML
@@ -45,7 +45,7 @@ async def html_doc(request):
 @aiohttp_jinja2.template('jobs.html')
 async def html_jobs_status(request):
     status = request.match_info.get('status')
-    jobs = list(mongo.madlab.jobs.find({'current_status': status}))
+    jobs = list(mongo.orqal.jobs.find({'current_status': status}))
     headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
     return {'headers': headers, 'logs': logs}
@@ -72,7 +72,7 @@ async def job_get(request):
             description: a job in dictionary format
     """
     id = request.match_info.get('id')
-    data = mongo.madlab.jobs.find_one({'_id': ObjectId(id)})
+    data = mongo.orqal.jobs.find_one({'_id': ObjectId(id)})
     if len(data) == 0:
         web.Response(status=404)
     else:
@@ -113,7 +113,7 @@ async def job_post(request):
     del data['_id']
     data['ctime'] = datetime.datetime.now()
     log.debug("post job from %s for %s", request.transport.get_extra_info('peername'), data)
-    _id = mongo.madlab.jobs.insert(data)
+    _id = mongo.orqal.jobs.insert(data)
     return web.Response(text=str(_id))
 
 
@@ -139,8 +139,8 @@ async def jobs_status(request):
                     type: integer
                     description: The number of job in this job.
     """
-    status_list = mongo.madlab.jobs.find().distinct('current_status')
-    status = {s: mongo.madlab.jobs.find({'current_status': s}).count() for s in status_list}
+    status_list = mongo.orqal.jobs.find().distinct('current_status')
+    status = {s: mongo.orqal.jobs.find({'current_status': s}).count() for s in status_list}
     status['todo'] = status.pop(None) if None in status.keys() else 0
     return web.json_response(status, headers={'Access-Control-Allow-Origin': "*"})
 
@@ -207,13 +207,13 @@ async def batch_post(request):
             data = json.loads(buffer.decode('utf-8'))
             del data['_id']
             data['ctime'] = datetime.datetime.now()
-            _id = mongo.madlab.jobs.insert(data)
+            _id = mongo.orqal.jobs.insert(data)
             jobs.append(_id)
             await resp.write(_id.binary)
             log.debug("batch %s %s %s", _id, data['input'], data['app'])
             buffer = b''
     if batch_id:
-        mongo.madlab.batch.update({'_id': batch_id}, {'$set': {'jobs': jobs}}, upsert=True)
+        mongo.orqal.batch.update({'_id': batch_id}, {'$set': {'jobs': jobs}}, upsert=True)
     return resp
 
 
@@ -237,7 +237,7 @@ async def batch_get(request):
           description: response a jobs identifier array
     """
     batch_id = request.match_info.get('id')
-    data = mongo.madlab.batch.find({'_id': batch_id})
+    data = mongo.orqal.batch.find({'_id': batch_id})
     return web.Response(body=dumps(data), content_type='application/json')
 
 
@@ -376,9 +376,9 @@ async def clean(request):
 
     action = request.match_info.get('action')
     if action == 'all':
-        mongo.madlab.jobs.delete_many({})
+        mongo.orqal.jobs.delete_many({})
     elif action == 'scheduled':
-        mongo.madlab.jobs.delete_many({'current_status': {'$ne': 'exited'}})
+        mongo.orqal.jobs.delete_many({'current_status': {'$ne': 'exited'}})
     else:
         web.Response(text='action in path needed', status=500)
     for h in conf.docker_hosts:
@@ -437,7 +437,7 @@ async def dataset(request):
     produces:
     - application/json
     """
-    return web.Response(body=dumps(mongo.madlab.dataset.find()), content_type='application/json')
+    return web.Response(body=dumps(mongo.orqal.dataset.find()), content_type='application/json')
 
 
 app = web.Application()
@@ -448,9 +448,9 @@ app.add_routes(routes)
 
 setup_swagger(app,
               description="Scalable cluster management and job scheduling system for large and small Docker clusters",
-              title="MadLab",
+              title="orqal",
               api_version="1.0",
-              contact="madlab@inria.fr")
+              contact="orqal@inria.fr")
 
 if __name__ == '__main__':
     web.run_app(app, port=5001)

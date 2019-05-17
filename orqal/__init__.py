@@ -6,15 +6,15 @@ import time
 import requests
 
 __version__ = '0.0.4'
-MADLAB_API_URL = os.environ.get("MADLAB_API_URL", "http://madlab.irisa.fr:5001/api")
+ORQAL_API_URL = os.environ.get("ORQAL_API_URL", "http://localhost:5001/api")
 
 logging.getLogger("requests").setLevel(logging.WARNING)
-log = logging.getLogger('madlab')
+log = logging.getLogger('orqal')
 log.setLevel(logging.DEBUG)
 
 services = []
 try:
-    services = requests.get(MADLAB_API_URL + "/status").json()['_services']
+    services = requests.get(ORQAL_API_URL + "/status").json()['_services']
 except Exception as e:
     log.error(str(e))
 
@@ -29,7 +29,7 @@ def wait(jobs):
 
 
 def batch(jobs, name=None):
-    url = MADLAB_API_URL + "/batch"
+    url = ORQAL_API_URL + "/batch"
     if name:
         url += "/" + name
     gen_jobs = (json.dumps(j.__dict__).encode('utf-8') for j in jobs)
@@ -60,7 +60,7 @@ class Job:
         self.save()
 
     def load(self):
-        url = MADLAB_API_URL + "/job/%s" % self._id
+        url = ORQAL_API_URL + "/job/%s" % self._id
         r = requests.get(url)
         r.raise_for_status()
         data = r.json()
@@ -68,7 +68,7 @@ class Job:
         return self.current_status
 
     def create(self):
-        url = MADLAB_API_URL + "/job"
+        url = ORQAL_API_URL + "/job"
         r = requests.post(url, data=json.dumps(self.__dict__))
         r.raise_for_status()
         self._id = r.content.decode('utf8')
