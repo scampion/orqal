@@ -1,6 +1,5 @@
 import json
 
-
 class AbstractWrapper:
     docker_url = None
     volumes = None
