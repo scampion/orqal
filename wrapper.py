@@ -1,3 +1,7 @@
+import logging
+import conf
+
+
 class AbstractWrapper:
     docker_url = None
     volumes = None
