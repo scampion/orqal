@@ -1,4 +1,7 @@
 import json
+import logging
+import conf
+
 
 class AbstractWrapper:
     docker_url = None
