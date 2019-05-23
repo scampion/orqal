@@ -28,13 +28,24 @@ def wait(jobs):
         time.sleep(1)
 
 
-def batch(jobs, name=None):
+def batch(jobs, name=None, slice_size=1000):
+    def sliceup(size, large_list):
+        for i in range(0, len(large_list), size):
+            yield large_list[i:i + size]
+
     url = ORQAL_API_URL + "/batch"
     if name:
         url += "/" + name
-    gen_jobs = (json.dumps(j.__dict__).encode('utf-8') for j in jobs)
-    return [Job(id=c.hex()) for c in requests.post(url, data=gen_jobs, stream=True).iter_content(chunk_size=12)]
+        r = requests.get(url)
+        if r.status_code == 200:  # batch already exist ?
+            return [Job(id=v['$oid']) for v in r.json()['jobs']]
+
+    results = []
+    for slice in sliceup(slice_size, jobs):  # slice array due to request hang after ~23 000 jobs
+        gen_jobs = (json.dumps(j.__dict__).encode('utf-8') for j in slice)
+        results += [Job(id=c.hex()) for c in requests.post(url, data=gen_jobs, stream=True).iter_content(chunk_size=12)]
     # nb: ObjectId is a 12-byte unique identifier
+    return results
 
 
 class Job:
@@ -50,9 +61,7 @@ class Job:
         self.stdout = []
         self.stderr = []
         self.result = None
-        if self._id:
-            self.load()
-        elif start:
+        if start:
             self.create()
 
     def status(self, s):

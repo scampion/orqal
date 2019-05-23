@@ -236,8 +236,11 @@ async def batch_get(request):
           description: response a jobs identifier array
     """
     batch_id = request.match_info.get('id')
-    data = mongo.orqal.batch.find({'_id': batch_id})
-    return web.Response(body=dumps(data), content_type='application/json')
+    data = mongo.orqal.batch.find_one({'_id': batch_id})
+    if data:
+        return web.Response(body=dumps(data), content_type='application/json')
+    else:
+        return web.Response(body="Not found", status=404)
 
 
 @routes.get('/api/stream/http://{host}/{id}')

@@ -126,6 +126,7 @@ def main():
         for r in client.orqal.jobs.find({'current_status': None}):
             id_ = r['_id']
             j = Job(id_)
+            j.load()
             log.debug("Job to launch %s", j)
             d = host_fit(j)
             if d:
