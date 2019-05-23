@@ -1,5 +1,9 @@
 mongourl = "mongodb://localhost/orqal"
-docker_hosts = ['192.168.100.51:2376', '192.168.100.52:2376']
+docker_hosts = ['192.168.100.51:2376',
+                '192.168.100.52:2376',
+                '192.168.100.53:2376',
+                '192.168.100.54:2376',
+                '192.168.100.55:2376']
 docker_api_version = '1.37'
 auth_config = {'username': 'test',
                'password': '65sX2-9sSXSp-hs-XeZ8'}
