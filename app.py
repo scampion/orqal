@@ -3,17 +3,16 @@ import concurrent
 import datetime
 import inspect
 import json
+import logging
 import os
-import re
 import sys
 
 import aiohttp_jinja2 as aiohttp_jinja2
-from aiohttp_swagger import setup_swagger
 import docker
 import jinja2
-import logging
 from aiohttp import web
-from bson import ObjectId, json_util
+from aiohttp_swagger import setup_swagger
+from bson import ObjectId
 from bson.json_util import dumps
 from pymongo import MongoClient
 
@@ -24,7 +23,7 @@ mongo = MongoClient(conf.mongourl)
 routes = web.RouteTableDef()
 
 logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger('orqal')
+log = logging.getLogger('orqal:web')
 
 
 # HTML

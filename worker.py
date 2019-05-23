@@ -25,7 +25,7 @@ dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)
 
-log = logging.getLogger('orqal')
+log = logging.getLogger('orqal:worker')
 
 
 class Job(orqal.Job):
