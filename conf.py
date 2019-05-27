@@ -6,3 +6,4 @@ auth_config = {'username': 'test',
 jobs_dir = "/scratch/jobs"
 graphana_url = "http://localhost:3000/dashboard/db/docker-and-system-monitoring"
 protected_containers = ['cadvisor']
+nb_disp_jobs = 20

@@ -4,6 +4,7 @@ import datetime
 import inspect
 import json
 import logging
+import math
 import os
 import sys
 
@@ -41,13 +42,20 @@ async def html_doc(request):
 
 
 @routes.get('/jobs/{status}')
+@routes.get('/jobs/{status}/{page}')
 @aiohttp_jinja2.template('jobs.html')
 async def html_jobs_status(request):
     status = request.match_info.get('status')
-    jobs = list(mongo.orqal.jobs.find({'current_status': status}))
+    page = request.match_info.get('page')
+    if page is None:
+        page = 1
+    else:
+        page = int(page)
+    nbpages = math.ceil(mongo.orqal.jobs.count({'current_status': status}) / conf.nb_disp_jobs)
+    jobs = list(mongo.orqal.jobs.find({'current_status': status}).skip((page-1)*conf.nb_disp_jobs).limit(conf.nb_disp_jobs))
     headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
-    return {'headers': headers, 'logs': logs}
+    return {'status': status, 'headers': headers, 'logs': logs, 'nbpages': nbpages, 'currentpage': page}
 
 
 # API
