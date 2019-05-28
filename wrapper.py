@@ -1,6 +1,7 @@
 import json
 import logging
 import conf
+import os
 
 
 class AbstractWrapper:
@@ -57,7 +58,7 @@ class TestProd(AbstractWrapper):
         job.set_result("My results")
 
 
-class SCDG(AbstractWrapper):
+class AngrExtraction(AbstractWrapper):
     docker_url = "madlab:5000/scdg/madlab-v2"
     threads = 1
     memory_in_gb = 10
@@ -67,7 +68,7 @@ class SCDG(AbstractWrapper):
         return "python /code/src/interfaces/cli.py %s params.json -o calls.json" % self.job.input
 
     def set_result(self, job):
-        pass
+        return os.path.join(self.job.wd, "calls.json")
 
 
 class Rabin2(AbstractWrapper):
@@ -117,3 +118,21 @@ class VirusTotal(AbstractWrapper):
 
     def set_result(self, job):
         job.set_result(json.dumps(job.logs))
+
+
+class SCDG(AbstractWrapper):
+    #docker_url = "registry.gitlab.inria.fr/scampion/madlab/scdg/trace_gridfs"
+    docker_url = "madlab:5000/scdg_graphs"
+    volumes = {'/scratch': {'bind': '/scratch', 'mode': 'rw'}}
+    threads = 1
+    memory_in_gb = 5
+    create_dir = True
+
+    def get_cmd(self, params):
+        return "python interfaces/cli.py %s params.json -o scdg.json" % self.job.input
+
+    def set_result(self, job):
+        job.set_result(os.path.join(self.job.wd, "scdg.json"))
+
+
+
