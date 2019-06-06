@@ -102,37 +102,32 @@ def app_limit(j):
     return None, None
 
 
-def host_fit(j):
-    threads_needed, memory_needed = app_limit(j)
-    docker_hosts = list(dockers.values())
-    random.shuffle(docker_hosts)
-    for d in docker_hosts:
+def audit():
+    for h, d in dockers.items():
         info = d['docker'].info()
-        cpu_needed = threads_needed * 10 ** 9 / info['NCPU'] if threads_needed else 10 ** 9
-        memory_needed = memory_needed if memory_needed else info['MemTotal'] * 10 ** 9  # todo replace by max
         mem_sched = sum([d['api'].inspect_container(c)['HostConfig']['Memory'] for c in d['api'].containers()])
         cpu_sched = sum([d['api'].inspect_container(c)['HostConfig']['NanoCpus'] for c in d['api'].containers()])
-        # log.debug("mem total %s %s", info['MemTotal'] , mem_sched)
         mem_avai = max(0, info['MemTotal'] - mem_sched)
         cpu_avai = 10 ** 9 - cpu_sched
-        log.debug("host_fit called for job %s:%s : %03d %03d - available %03d %03d",
-                  j.app, j._id, memory_needed, cpu_needed, mem_avai, cpu_avai)
-        if mem_avai >= memory_needed and cpu_avai >= cpu_needed:
-            return d
+        yield h, info, mem_avai, cpu_avai
 
 
 def main():
     while True:
+        ressources = {h: (i, m, c) for h, i, m, c in audit()}
         for r in client.orqal.jobs.find({'current_status': None}):
             id_ = r['_id']
             j = Job(id_)
             j.load()
             log.debug("Job to launch %s", j)
-            d = host_fit(j)
-            if d:
-                j.status('init')
-                threading.Thread(target=worker, args=(j, d)).start()
-                time.sleep(1)  # in order to retrieve stats
+            threads_needed, memory_needed = app_limit(j)
+            for h, (info, m, c) in ressources.items():
+                cpu_needed = threads_needed * 10 ** 9 / info['NCPU'] if threads_needed else 10 ** 9
+                if m >= memory_needed and c >= cpu_needed:
+                    j.status('init')
+                    threading.Thread(target=worker, args=(j, dockers[h])).start()
+                    ressources[h] = (info, m - memory_needed, c - cpu_needed)
+                    break
             else:
                 log.debug("No ressource available for job %s", j)
         print('Wait ...')
