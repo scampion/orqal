@@ -99,3 +99,12 @@ restart docker:
 
 
 
+
+### Clean old jobs
+
+Add a index (7 days here):
+
+	db.jobs.createIndex( { "ctime": 1 }, { expireAfterSeconds: 604800 } )
+
+And call http://<server>/api/clean/old periodically in order to delete old job directories.
+
