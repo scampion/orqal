@@ -439,17 +439,6 @@ async def status(request):
     return web.json_response(s)
 
 
-@routes.get('/api/dataset.json', allow_head=False)
-async def dataset(request):
-    """
-    ---
-    summary:  Retrieve dataset in order to backup it
-    produces:
-    - application/json
-    """
-    return web.Response(body=dumps(mongo.orqal.dataset.find()), content_type='application/json')
-
-
 app = web.Application()
 aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('./templates'))
 for d in ['assets', 'images', 'vendors']:
