@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import os
+import shutil
 import sys
 
 import aiohttp_jinja2 as aiohttp_jinja2
@@ -387,22 +388,32 @@ async def clean(request):
     action = request.match_info.get('action')
     if action == 'all':
         mongo.orqal.jobs.delete_many({})
+        return web.Response(text='all jobs purged', status=200)
     elif action == 'scheduled':
         mongo.orqal.jobs.delete_many({'current_status': {'$ne': 'exited'}})
+        return web.Response(text='all jobs scheduled purged', status=200)
+    elif action == 'old':
+        resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
+        await resp.prepare(request)
+        for d in os.listdir(conf.jobs_dir):
+            if not mongo.orqal.jobs.find_one({'_id': d}):
+                log.debug("delete dir %s", d)
+                shutil.rmtree(os.path.join(conf.jobs_dir, d))
+                await resp.write(bytes("%s\n" % d, "utf8"))
+        return resp
+    elif action == 'containers':
+        for h in conf.docker_hosts:
+            client = docker.DockerClient(base_url=h, version=conf.docker_api_version)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+                future_to_stats = {executor.submit(kill_and_remove, c): c for c in containers_to_kill(client)}
+                for future in concurrent.futures.as_completed(future_to_stats):
+                    try:
+                        future.result()
+                    except Exception as exc:
+                        log.error(exc)
+            return web.Response(text='containers removed', status=200)
     else:
-        web.Response(text='action in path needed', status=500)
-    for h in conf.docker_hosts:
-        client = docker.DockerClient(base_url=h, version=conf.docker_api_version)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
-            future_to_stats = {executor.submit(kill_and_remove, c): c for c in containers_to_kill(client)}
-            for future in concurrent.futures.as_completed(future_to_stats):
-                try:
-                    future.result()
-                except Exception as exc:
-                    log.error(exc)
-
-    return web.Response(text='done', status=200)
+        return web.Response(text='action in path needed', status=500)
 
 
 @routes.get('/api/status', allow_head=False)
