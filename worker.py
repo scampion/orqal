@@ -63,6 +63,7 @@ class Job(orqal.Job):
             self.status("error")
         finally:
             self.inspect = api.inspect_container(c.id)
+            self.lswd = os.listdir(self.wd)
             self.save()
             logging.debug("inspect results : %s", self.inspect)
             c.remove()

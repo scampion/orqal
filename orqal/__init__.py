@@ -58,11 +58,16 @@ class Job:
         self.user = getpass.getuser()
         self.current_status = None
         self.container = None
+        self.lswd = []
         self.stdout = []
         self.stderr = []
         self.result = None
         if start:
             self.create()
+
+    @property
+    def files(self):
+        return {f: ORQAL_API_URL + f"/job/{self._id}/download/{f}" for f in self.lswd}
 
     def status(self, s):
         self.current_status = s
@@ -83,6 +88,7 @@ class Job:
         self._id = r.content.decode('utf8')
         assert self._id, "Cannot create job"
         self.load()
+
 
     def __str__(self):
         return "Job <%s | %s | %s | %s>" % (self._id, self.app, self.input, self.current_status)
