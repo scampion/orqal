@@ -16,7 +16,7 @@ from aiohttp import web
 from aiohttp_swagger import setup_swagger
 from bson import ObjectId
 from bson.json_util import dumps
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING
 
 import conf
 
@@ -53,7 +53,7 @@ async def html_jobs_status(request):
     else:
         page = int(page)
     nbpages = math.ceil(mongo.orqal.jobs.count({'current_status': status}) / conf.nb_disp_jobs)
-    jobs = list(mongo.orqal.jobs.find({'current_status': status}).skip((page-1)*conf.nb_disp_jobs).limit(conf.nb_disp_jobs))
+    jobs = list(mongo.orqal.jobs.find({'current_status': status}).skip((page-1)*conf.nb_disp_jobs).limit(conf.nb_disp_jobs).sort("ctime", DESCENDING))
     headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
     return {'status': status, 'headers': headers, 'logs': logs, 'nbpages': nbpages, 'currentpage': page}
