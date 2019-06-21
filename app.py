@@ -22,7 +22,7 @@ from pymongo import MongoClient, DESCENDING
 
 import conf
 
-mongo = MongoClient(conf.mongourl)
+mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
 
 routes = web.RouteTableDef()
 
