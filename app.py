@@ -21,7 +21,7 @@ from mongolog.handlers import MongoHandler
 
 import conf
 
-mongo = MongoClient(conf.mongourl, replicatSet=conf.mongo_replicaset)
+mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
 
 routes = web.RouteTableDef()
 
