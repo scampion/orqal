@@ -17,6 +17,7 @@ from aiohttp_swagger import setup_swagger
 from bson import ObjectId
 from bson.json_util import dumps
 from pymongo import MongoClient
+from mongolog.handlers import MongoHandler
 
 import conf
 
@@ -25,7 +26,8 @@ mongo = MongoClient(conf.mongourl)
 routes = web.RouteTableDef()
 
 logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger('orqal:web')
+log = logging.getLogger('app')
+log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 
 
 # HTML
