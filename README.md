@@ -43,7 +43,12 @@ class Rabin2(AbstractWorker):
 A docker-compose file can be used as receipe to install it.
 
 ⚠️ work in progress
- 
+
+
+### Setup log collection in Mongo 
+
+    use orqal
+    db.createCollection('log', {capped:true, size:100000}) 
 
 ## Run 
 

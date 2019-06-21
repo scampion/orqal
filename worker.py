@@ -1,8 +1,6 @@
 import inspect
-import json
 import logging
 import os
-import random
 import sys
 import threading
 import time
@@ -13,6 +11,7 @@ import docker
 import conf
 import orqal
 import wrapper
+from mongolog.handlers import MongoHandler
 
 from pymongo import MongoClient
 
@@ -25,7 +24,8 @@ dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)
 
-log = logging.getLogger('orqal:worker')
+log = logging.getLogger('worker')
+log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 
 
 class Job(orqal.Job):
