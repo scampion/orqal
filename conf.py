@@ -1,6 +1,6 @@
 mongourl = "mongodb://localhost/orqal"
-
 docker_hosts = ['192.168.100.%d:2376' % i for i in range(51, 65)]
+mongo_replicaset = "madlabReplSet"
 docker_api_version = '1.37'
 auth_config = {'username': 'test',
                'password': '65sX2-9sSXSp-hs-XeZ8'}

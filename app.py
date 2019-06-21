@@ -20,7 +20,7 @@ from pymongo import MongoClient
 
 import conf
 
-mongo = MongoClient(conf.mongourl)
+mongo = MongoClient(conf.mongourl, replicatSet=conf.mongo_replicaset)
 
 routes = web.RouteTableDef()
 
