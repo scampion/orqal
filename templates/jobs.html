@@ -33,19 +33,25 @@
         {% if (nbpages == 0 or nbpages == 1) %}
         <label>{{nbpages}}</label>
         {% else %}
+        {% if currentpage > 6 %}
         <a href="/jobs/{{status}}/1">First</a>
-        {% for i in [3, 2, 1] %}
+        <label>...</label>
+        {% endif %}
+        {% for i in [5, 4, 3, 2, 1] %}
         {% if currentpage > i %}
         <a href="/jobs/{{status}}/{{currentpage - i}}">{{currentpage - i}}</a>
         {% endif %}
         {% endfor %}
         <label>{{currentpage}}</label>
-        {% for i in [1, 2, 3] %}
-        {% if currentpage < nbpages + i %}
+        {% for i in [1, 2, 3, 4, 5] %}
+        {% if currentpage <= (nbpages - i) %}
         <a href="/jobs/{{status}}/{{currentpage + i}}">{{currentpage + i}}</a>
         {% endif %}
         {% endfor %}
+        {% if currentpage < (nbpages - 5) %}
+        <label>...</label>
         <a href="/jobs/{{status}}/{{nbpages}}">Last</a>
+        {% endif %}
         {% endif %}
     </div>
 </div>
