@@ -121,15 +121,20 @@ def main():
             j.load()
             log.debug("Job to launch %s", j)
             threads_needed, memory_needed = app_limit(j)
-            for h, (info, m, c) in ressources.items():
-                cpu_needed = threads_needed * 10 ** 9 / info['NCPU'] if threads_needed else 10 ** 9
-                if m >= memory_needed and c >= cpu_needed:
-                    j.status('init')
-                    threading.Thread(target=worker, args=(j, dockers[h])).start()
-                    ressources[h] = (info, m - memory_needed, c - cpu_needed)
-                    break
+            if not threads_needed and not memory_needed:
+                log.error("app not well configured or doesnt exist")
+                j.stderr.append("app not well configured or doesnt exist")
+                j.status("error")
             else:
-                log.debug("No ressource available for job %s", j)
+                for h, (info, m, c) in ressources.items():
+                    cpu_needed = threads_needed * 10 ** 9 / info['NCPU'] if threads_needed else 10 ** 9
+                    if m >= memory_needed and c >= cpu_needed:
+                        j.status('init')
+                        threading.Thread(target=worker, args=(j, dockers[h])).start()
+                        ressources[h] = (info, m - memory_needed, c - cpu_needed)
+                        break
+                    else:
+                        log.debug("No ressource available for job %s", j)
         print('Wait ...')
         time.sleep(5)
 
