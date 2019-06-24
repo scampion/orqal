@@ -2,7 +2,6 @@
 
 {% block body %}
 <div class="content mt-3">
-
     <table class="table table-striped">
         <!--<thead>-->
             <!--<tr>-->
@@ -13,32 +12,14 @@
         <tbody>
             {% for j in logs %}
             <tr>
-                <td>{{ j['levelname'] }}</td>
-                <td>{{ j['message'] }}</td>
+                <td>{{ j[0] }}</td>
+                <td>{{ j[1] }}</td>
+                <td>{{ j[2] }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="pagination">
-        {% if (nbpages == 0 or nbpages == 1) %}
-        <label>{{nbpages}}</label>
-        {% else %}
-        <a href="/logs/{{status}}/1">First</a>
-        {% for i in [3, 2, 1] %}
-        {% if currentpage > i %}
-        <a href="/logs/{{status}}/{{currentpage - i}}">{{currentpage - i}}</a>
-        {% endif %}
-        {% endfor %}
-        <label>{{currentpage}}</label>
-        {% for i in [1, 2, 3] %}
-        {% if currentpage < nbpages + i %}
-        <a href="/logs/{{status}}/{{currentpage + i}}">{{currentpage + i}}</a>
-        {% endif %}
-        {% endfor %}
-        <a href="/logs/{{status}}/{{nbpages}}">Last</a>
-        {% endif %}
-    </div>
 </div>
 
 {% endblock %}

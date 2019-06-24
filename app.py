@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import os
+import pymongo
 import shutil
 import sys
 
@@ -62,19 +63,13 @@ async def html_jobs_status(request):
 
 
 @routes.get('/logs/{process}')
-@routes.get('/logs/{process}/{page}')
 @aiohttp_jinja2.template('logs.html')
 async def html_logs(request):
     process = request.match_info.get('process')
-    page = request.match_info.get('page')
-    if page is None:
-        page = 1
-    else:
-        page = int(page)
-    nbpages = math.ceil(mongo.orqal.logs.count({'module': process}) / conf.nb_disp_logs)
-    logs = list(mongo.orqal.logs.find({'current_status': status}).skip((page-1)*conf.nb_disp_logs).limit(conf.nb_disp_logs))
+    logs = list(mongo.orqal.log.find({'module': process}).sort([("time", pymongo.DESCENDING)]))
+    headers = ['levelname', 'time', 'message']
     logs = [[j.get(key, '') for key in headers] for j in logs]
-    return {'process': process, 'logs': logs, 'nbpages': nbpages, 'currentpage': page}
+    return {'process': process, 'logs': logs}
 
 
 # API
