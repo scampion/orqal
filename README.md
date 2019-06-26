@@ -48,7 +48,8 @@ A docker-compose file can be used as receipe to install it.
 ### Setup log collection in Mongo 
 
     use orqal
-    db.createCollection('log', {capped:true, size:100000}) 
+    db.createCollection('log', {capped:true, size:10000000}) 
+    db.log.createIndex( { "time": 1 }, { expireAfterSeconds: 86400 } )
 
 ## Run 
 
