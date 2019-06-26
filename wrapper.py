@@ -129,7 +129,7 @@ class SCDG(AbstractWrapper):
     create_dir = True
 
     def get_cmd(self, params):
-        return "python interfaces/cli.py %s params.json -o scdg.json" % self.job.input
+        return "python /code/interfaces/cli.py %s params.json -o scdg.json" % self.job.input
 
     def set_result(self, job):
         job.set_result(os.path.join(self.job.wd, "scdg.json"))
