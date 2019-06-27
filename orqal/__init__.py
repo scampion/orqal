@@ -12,11 +12,12 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('orqal')
 log.setLevel(logging.DEBUG)
 
-services = []
-try:
-    services = requests.get(ORQAL_API_URL + "/status").json()['_services']
-except Exception as e:
-    log.error(str(e))
+@property
+def services():
+    try:
+        return requests.get(ORQAL_API_URL + "/status").json()['_services']
+    except Exception as e:
+        log.error(str(e))
 
 
 def wait(jobs):
