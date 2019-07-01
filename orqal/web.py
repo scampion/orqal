@@ -469,7 +469,6 @@ app = web.Application()
 aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('./templates'))
 for d in ['assets', 'images', 'vendors']:
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    print("DEBUG " + os.path.join(current_dir, 'static', d))
     app.router.add_static('/' + d, path=os.path.join(current_dir, 'static', d), name=d)
 app.add_routes(routes)
 
@@ -478,7 +477,6 @@ setup_swagger(app,
               title="orqal",
               api_version="1.0",
               contact=conf.contact)
-
 
 def main():
     web.run_app(app, port=5001)
