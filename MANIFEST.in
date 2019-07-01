@@ -1,3 +1,4 @@
 include *.md
-recursive-include orqal
-
+recursive-include orqal/static *
+recursive-include orqal/templates *
+recursive-include orqal *

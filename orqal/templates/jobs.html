@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="content mt-3">
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col"> stream </th>
+                {% for k in headers %}
+                <th scope="col">{{ k }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for j in logs %}
+            <tr>
+                <td><a href="/api/stream/{{ j[headers.index('host')] }}/{{ j[headers.index('container_id')] }}"> logs
+                    </a></td>
+                {% for v in j %}
+                {% if loop.index == 1 %}
+                <td><a href="/api/job/{{v}}">{{ v }}</a></td>
+                {% else %}
+                <td>{{ v }}</td>
+                {% endif %}
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        {% if (nbpages == 0 or nbpages == 1) %}
+        <label>{{nbpages}}</label>
+        {% else %}
+        {% if currentpage > 6 %}
+        <a href="/jobs/{{status}}/1">First</a>
+        <label>...</label>
+        {% endif %}
+        {% for i in [5, 4, 3, 2, 1] %}
+        {% if currentpage > i %}
+        <a href="/jobs/{{status}}/{{currentpage - i}}">{{currentpage - i}}</a>
+        {% endif %}
+        {% endfor %}
+        <label>{{currentpage}}</label>
+        {% for i in [1, 2, 3, 4, 5] %}
+        {% if currentpage <= (nbpages - i) %}
+        <a href="/jobs/{{status}}/{{currentpage + i}}">{{currentpage + i}}</a>
+        {% endif %}
+        {% endfor %}
+        {% if currentpage < (nbpages - 5) %}
+        <label>...</label>
+        <a href="/jobs/{{status}}/{{nbpages}}">Last</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

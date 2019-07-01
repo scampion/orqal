@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="content mt-3">
+    <table class="table table-striped">
+        <!--<thead>-->
+            <!--<tr>-->
+                <!--<th scope="col"> stream </th>-->
+                <!--<th scope="col"> stream </th>-->
+            <!--</tr>-->
+        <!--</thead>-->
+        <tbody>
+            {% for j in logs %}
+            <tr>
+                <td>{{ j[0] }}</td>
+                <td>{{ j[1] }}</td>
+                <td>{{ j[2] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

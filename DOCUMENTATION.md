@@ -1,4 +1,4 @@
-![](orqal/static/images/orqal.svg) 
+![](./static/images/orqal.svg) 
 
 Orqal for [ORQ]chestration of [AL]gorithms is a simple batch scheduler for docker cluster which can be used remotly and without overhead in scientific experiment.
 
@@ -6,13 +6,13 @@ Orqal for [ORQ]chestration of [AL]gorithms is a simple batch scheduler for docke
 
 ### Overview
 	Orqal claim to be and stay as simple as possible. 
-![](orqal/static/images/orqal_overview.svg)
+![](./static/images/orqal_overview.svg)
 
 - We use the docker api to manage docker nodes, which means that there is **no configuration** on node except open the api port. 
 - **HTTP/REST API** enable to schedule jobs and retrieve data.
 - A **dashboard** is provided to monitor load average per nodes, jobs scheduling and redoc api.
 
-![](orqal/static/images/dashboard.png)
+![](./static/images/dashboard.png)
 
 ### Wrapper
 
