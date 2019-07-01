@@ -7,9 +7,8 @@ import time
 import traceback
 
 import docker
-
-from orqal import conf
 import orqal
+import conf
 import wrapper
 from mongolog.handlers import MongoHandler
 
@@ -101,7 +100,7 @@ def app_limit(j):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             nbthread = obj(j).threads if obj(j).threads else 1
             maxmemory = obj(j).memory_in_gb if obj(j).memory_in_gb else 10 ** 9
-            return nbthread, maxmemory10 ** 9
+            return nbthread, maxmemory
     return None, None
 
 
