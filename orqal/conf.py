@@ -5,7 +5,7 @@ mongourl = os.getenv("ORQAL_MONGO_URI", 'mongodb://localhost/')
 mongo = MongoClient(mongourl)
 
 mconf = {'mongourl': 'mongodb://localhost/',
-           'mongo_replicaset': "madlabReplSet",
+           'mongo_replicaset': "myreplicaset",
            'docker_hosts': ['192.168.100.%d:2376' % i for i in range(51, 65)],
            'docker_api_version': '1.37',
            'registry_auth_config': {'username': 'test',

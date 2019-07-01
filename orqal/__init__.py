@@ -12,7 +12,6 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('orqal')
 log.setLevel(logging.DEBUG)
 
-@property
 def services():
     try:
         return requests.get(ORQAL_API_URL + "/status").json()['_services']
