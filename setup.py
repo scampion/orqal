@@ -2,6 +2,9 @@ from setuptools import setup, find_packages
 
 import orqal
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setup(
     name='orqal',
     version=orqal.__version__,
@@ -11,7 +14,15 @@ setup(
     description="orqal client module",
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
+    install_requires=requirements,
+    entry_points={
+        'console_scripts': [
+            'orqal-web = orqal.web:main',
+            'orqal-worker = orqal.worker:main',
+        ],
+    },
     include_package_data=True,
+    zip_safe=True,
     classifiers=[
         "Programming Language :: Python",
         "Development Status :: 1 - Planning",
