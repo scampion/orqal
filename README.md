@@ -38,6 +38,81 @@ class Rabin2(AbstractWorker):
         job.set_result(r)
 ```
 
+## Configuration 
+
+In order to establish a DB connection, process will search the following environment variable : 
+    
+    ORQAL_MONGO_URI
+
+By default :  'mongodb://localhost/'
+
+Other settings will be loaded from the conf collection, using the request : active=True
+
+Here is a example : 
+NB : The first run will initiate it if necessary
+
+```json
+    {
+        "_id" : ObjectId("5d1a78eca307b20dd5a660ce"),
+        "active" : true,
+        "mongourl" : "mongodb://localhost/",
+        "docker_hosts" : [ 
+            "192.168.100.51:2376", 
+            .....
+            "192.168.100.64:2376"
+        ],
+        "docker_api_version" : "1.37",
+        "mongo_replicaset" : "madlabReplSet",
+        "registry_auth_config" : {
+            "password" : "65sX2-9sSXSp-hs-XeZ8",
+            "username" : "test"
+        },
+        "services" : "/home/madlab/services.py",
+        "nb_disp_jobs" : 30,
+        "contact" : "orqal@example.com",
+        "jobs_dir" : "/scratch/jobs"
+    }
+```
+
+## Services
+
+The python module is defined in the configuration (see services above)
+
+Here is a example : 
+
+```python
+import json
+import logging
+import conf
+import os
+from orqal.abstract import AbstractWrapper
+
+class TestProd(AbstractWrapper):
+    docker_url = "madlab:5000/test_module"
+
+    def get_cmd(self, params):
+        return "python3 simple_job.py %s %s %s" % (params['echo'], params['time'], params['exit_code'])
+
+    def set_result(self, job):
+        job.set_result("My results")
+
+
+class AngrExtraction(AbstractWrapper):
+    docker_url = "madlab:5000/scdg/madlab-v2"
+    threads = 1
+    memory_in_gb = 10
+    create_dir = True
+
+    def get_cmd(self, params):
+        return "python /code/src/interfaces/cli.py %s params.json -o calls.json" % self.job.input
+
+    def set_result(self, job):
+        return os.path.join(self.job.wd, "calls.json")
+```
+
+
+
+
 ## Install 
 
 A docker-compose file can be used as receipe to install it.
@@ -64,7 +139,7 @@ A docker-compose file can be used as receipe to install it.
 	
 
 
-## Compile Client
+## Distribution
 
 ```	
    python setup.py bdist
@@ -82,7 +157,8 @@ https://www.gnu.org/licenses/agpl-3.0.txt
 - Dashboard template : https://github.com/puikinsh/sufee-admin-dashboard
 - Font : https://fonts.google.com/specimen/Righteous
 
-### How to open api port on docker:
+### FAQ 
+#### How to open api port on docker ?
 
 Add in file `/etc/systemd/system/docker.service.d/override.conf`
 
