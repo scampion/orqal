@@ -20,7 +20,7 @@ from bson.json_util import dumps
 from mongolog.handlers import MongoHandler
 from pymongo import MongoClient, DESCENDING
 
-from orqal import conf
+import conf
 
 mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
 
@@ -36,13 +36,13 @@ log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 @routes.get('/')
 @aiohttp_jinja2.template('index.html')
 async def html_index(request):
-    return {"graphana_url": conf.graphana_url}
+    return {}
 
 
 @routes.get('/doc')
 @aiohttp_jinja2.template('doc.html')
 async def html_doc(request):
-    return {"graphana_url": conf.graphana_url}
+    return {}
 
 
 @routes.get('/jobs/{status}')
@@ -478,7 +478,7 @@ def main():
                   title="orqal",
                   api_version="1.0",
                   contact=conf.contact)
-    web.run_app(app, port=5555)
+    web.run_app(app, port=5001)
 
 
 if __name__ == '__main__':
