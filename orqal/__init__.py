@@ -68,7 +68,7 @@ class Job:
 
     @property
     def files(self):
-        return {f: ORQAL_API_URL + f"/job/{self._id}/download/{f}" for f in self.lswd}
+        return {f: ORQAL_API_URL + "/job/%s/download/%s" % (self._id, f) for f in self.lswd}
 
     def status(self, s):
         self.current_status = s
