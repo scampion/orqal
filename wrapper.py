@@ -129,10 +129,19 @@ class SCDG(AbstractWrapper):
     create_dir = True
 
     def get_cmd(self, params):
-        return "python interfaces/cli.py %s params.json -o scdg.json" % self.job.input
+        return "python /code/interfaces/cli.py %s params.json -o scdg.json" % self.job.input
 
     def set_result(self, job):
         job.set_result(os.path.join(self.job.wd, "scdg.json"))
 
 
+class Yara(AbstractWrapper):
+    docker_url = "madlab:5000/yara"
+    volumes = {'/database': {'bind': '/database', 'mode': 'ro'}}
+    create_dir = True
 
+    def get_cmd(self, params):
+        option = ""
+        for p in params.items():
+            option += "{} {}".format(*p)
+        return "yara %s %s %s" % (option, self.job.input[0], self.job.input[1])
