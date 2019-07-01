@@ -1,0 +1,7 @@
+.pagination {
+    display: table;
+    margin: auto; }
+    .pagination a {
+        margin-left: 5px; }
+    .pagination label {
+        margin-left: 5px; }
