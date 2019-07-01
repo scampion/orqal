@@ -13,6 +13,8 @@ mconf = {'mongourl': 'mongodb://localhost/',
            'jobs_dir': "/scratch/jobs",
            'nb_disp_jobs': 30,
            'contact': "orqal@example.com",
+           'services': "~/services.py", 
+           'active': True
            }
 
 dbconf = mongo.orqal.conf.find_one({'active': True})
