@@ -4,7 +4,7 @@ from pymongo import MongoClient
 mongourl = os.getenv("ORQAL_MONGO_URI", 'mongodb://localhost/')
 mongo = MongoClient(mongourl)
 
-default = {'mongourl': 'mongodb://localhost/',
+mconf = {'mongourl': 'mongodb://localhost/',
            'mongo_replicaset': "madlabReplSet",
            'docker_hosts': ['192.168.100.%d:2376' % i for i in range(51, 65)],
            'docker_api_version': '1.37',
@@ -16,6 +16,10 @@ default = {'mongourl': 'mongodb://localhost/',
            }
 
 dbconf = mongo.orqal.conf.find_one({'active': True})
-mconf = {**default, **dbconf}
+if dbconf:
+    mconf = {**default, **dbconf}
+    mongo.orqal.conf.replace_one({'_id': mconf['_id']}, mconf)
+else:
+    mongo.orqal.conf.insert_one(mconf)
+
 locals().update(mconf)
-mongo.orqal.conf.replace_one({'_id': mconf['_id']}, mconf)

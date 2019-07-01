@@ -20,7 +20,7 @@ from bson.json_util import dumps
 from mongolog.handlers import MongoHandler
 from pymongo import MongoClient, DESCENDING
 
-from orqal import conf
+import conf
 
 mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
 
@@ -36,13 +36,13 @@ log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 @routes.get('/')
 @aiohttp_jinja2.template('index.html')
 async def html_index(request):
-    return {"graphana_url": conf.graphana_url}
+    return {}
 
 
 @routes.get('/doc')
 @aiohttp_jinja2.template('doc.html')
 async def html_doc(request):
-    return {"graphana_url": conf.graphana_url}
+    return {}
 
 
 @routes.get('/jobs/{status}')
@@ -51,14 +51,14 @@ async def html_doc(request):
 async def html_jobs_status(request):
     status = mongostatus = request.match_info.get('status')
     if mongostatus == "todo":
-      mongostatus = None
+        mongostatus = None
     page = request.match_info.get('page')
     if page is None:
         page = 1
     else:
         page = int(page)
     nbpages = math.ceil(mongo.orqal.jobs.count({'current_status': mongostatus}) / conf.nb_disp_jobs)
-    jobs = list(mongo.orqal.jobs.find({'current_status': mongostatus}).skip((page-1) * conf.nb_disp_jobs).limit(
+    jobs = list(mongo.orqal.jobs.find({'current_status': mongostatus}).skip((page - 1) * conf.nb_disp_jobs).limit(
         conf.nb_disp_jobs).sort("ctime", DESCENDING))
     headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
@@ -465,20 +465,23 @@ async def status(request):
     return web.json_response(s)
 
 
-def main():
-    app = web.Application()
-    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('./templates'))
-    for d in ['assets', 'images', 'vendors']:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        app.router.add_static('/' + d, path=os.path.join(current_dir, 'static', d), name=d)
-    app.add_routes(routes)
+app = web.Application()
+aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('./templates'))
+for d in ['assets', 'images', 'vendors']:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    print("DEBUG " + os.path.join(current_dir, 'static', d))
+    app.router.add_static('/' + d, path=os.path.join(current_dir, 'static', d), name=d)
+app.add_routes(routes)
 
-    setup_swagger(app,
-                  description="Scalable cluster management and job scheduling system for large and small Docker clusters",
-                  title="orqal",
-                  api_version="1.0",
-                  contact=conf.contact)
-    web.run_app(app, port=5555)
+setup_swagger(app,
+              description="Scalable cluster management and job scheduling system for large and small Docker clusters",
+              title="orqal",
+              api_version="1.0",
+              contact=conf.contact)
+
+
+def main():
+    web.run_app(app, port=5001)
 
 
 if __name__ == '__main__':
