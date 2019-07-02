@@ -8,7 +8,7 @@ import traceback
 
 import docker
 import orqal
-import conf
+from . import conf
 import wrapper
 from mongolog.handlers import MongoHandler
 
