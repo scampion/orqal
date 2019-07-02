@@ -20,7 +20,7 @@ from bson.json_util import dumps
 from mongolog.handlers import MongoHandler
 from pymongo import MongoClient, DESCENDING
 
-from . import conf
+import conf
 
 mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
 
