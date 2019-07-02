@@ -38,6 +38,30 @@ class Rabin2(AbstractWorker):
         job.set_result(r)
 ```
 
+## Install 
+
+    pip3 install orqal 
+
+## Run 
+
+
+Start the web worker : 
+
+    orqal-worker
+
+
+Start the web interface : 
+
+    orqal-web
+    
+NB: In a production mode, use gunicorn, in orqal dir : 
+
+    gunicorn3 web:app --bind 0.0.0.0:5001 --worker-class aiohttp.GunicornWebWorker --workers 8 --timeout 120
+user
+
+
+    
+
 ## Configuration 
 
 In order to establish a DB connection, process will search the following environment variable : 
@@ -49,7 +73,8 @@ By default :  'mongodb://localhost/'
 Other settings will be loaded from the conf collection, using the request : active=True
 
 Here is a example : 
-NB : The first run will initiate it if necessary
+
+`NB : The first run will initiate it if necessary`
 
 ```json
     {
@@ -73,6 +98,9 @@ NB : The first run will initiate it if necessary
         "jobs_dir" : "/scratch/jobs"
     }
 ```
+
+
+
 
 ## Services
 
@@ -112,31 +140,13 @@ class AngrExtraction(AbstractWrapper):
 
 
 
+### DB tuning : log collection in Mongo 
 
-## Install 
-
-A docker-compose file can be used as receipe to install it.
-
-⚠️ work in progress
-
-
-### Setup log collection in Mongo 
+Process use a mongo logging handler, in order to provide it in the web interface, you can customize parameters like that : 
 
     use orqal
     db.createCollection('log', {capped:true, size:10000000}) 
     db.log.createIndex( { "time": 1 }, { expireAfterSeconds: 86400 } )
-
-## Run 
-
-1 - Web process
-
-    gunicorn app:app --bind 0.0.0.0:5001 --worker-class aiohttp.GunicornWebWorker  --workers 8
-
-
-2 - Worker 
-
-	python3 worker.py 
-	
 
 
 ## Distribution

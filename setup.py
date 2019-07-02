@@ -11,7 +11,7 @@ setup(
     packages=find_packages(),
     author="Sebastien Campion",
     author_email="sebastien.campion@inria.fr",
-    description="orqal client module",
+    description="Orchestration of Algorithm on docker cluster",
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     install_requires=requirements,
