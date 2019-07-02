@@ -19,7 +19,7 @@ mconf = {'mongourl': 'mongodb://localhost/',
 
 dbconf = mongo.orqal.conf.find_one({'active': True})
 if dbconf:
-    mconf = {**default, **dbconf}
+    mconf = {**mconf, **dbconf}
     mongo.orqal.conf.replace_one({'_id': mconf['_id']}, mconf)
 else:
     mongo.orqal.conf.insert_one(mconf)
