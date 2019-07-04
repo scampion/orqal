@@ -5,7 +5,6 @@ import os
 import time
 import requests
 
-__version__ = '0.0.4'
 ORQAL_API_URL = os.environ.get("ORQAL_API_URL", "http://localhost:5001/api")
 
 logging.getLogger("requests").setLevel(logging.WARNING)
