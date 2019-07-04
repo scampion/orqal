@@ -20,7 +20,7 @@ from bson.json_util import dumps
 from mongolog.handlers import MongoHandler
 from pymongo import MongoClient, DESCENDING
 
-from . import conf
+from orqal import conf
 
 mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
 
@@ -466,7 +466,8 @@ async def status(request):
 
 
 app = web.Application()
-aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('./templates'))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(os.path.join(current_dir, 'templates')))
 for d in ['assets', 'images', 'vendors']:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     app.router.add_static('/' + d, path=os.path.join(current_dir, 'static', d), name=d)
