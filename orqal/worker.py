@@ -5,10 +5,11 @@ import sys
 import threading
 import time
 import traceback
+from random import randrange
 
 import docker
 import orqal
-from . import conf
+from orqal import conf
 import wrapper
 from mongolog.handlers import MongoHandler
 
@@ -62,7 +63,7 @@ class Job(orqal.Job):
             self.status("error")
         finally:
             self.inspect = api.inspect_container(c.id)
-            self.lswd = os.listdir(self.wd)
+            self.lswd = os.listdir(self.wd) if os.path.exists(self.wd) else []
             self.save()
             logging.debug("inspect results : %s", self.inspect)
             c.remove()
@@ -99,7 +100,7 @@ def app_limit(j):
     for name, obj in inspect.getmembers(sys.modules["wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             nbthread = obj(j).threads if obj(j).threads else 1
-            maxmemory = obj(j).memory_in_gb if obj(j).memory_in_gb else 10 ** 9
+            maxmemory = obj(j).memory_in_gb * 10 ** 9 if obj(j).memory_in_gb else 10 ** 9
             return nbthread, maxmemory
     return None, None
 
@@ -130,6 +131,8 @@ def main():
             else:
                 for h, (info, m, c) in ressources.items():
                     cpu_needed = threads_needed * 10 ** 9 / info['NCPU'] if threads_needed else 10 ** 9
+                    log.debug("cpu_needed %s / mem_needed %s / cpu_avail %s / mem_avail %s /h %s",
+                                cpu_needed, memory_needed, c, m, h)
                     if m >= memory_needed and c >= cpu_needed:
                         j.status('init')
                         threading.Thread(target=worker, args=(j, dockers[h])).start()
@@ -137,6 +140,8 @@ def main():
                         break
                     else:
                         log.debug("No ressource available for job %s", j)
+                        if randrange(10) == 1: 
+                            ressources = {h: (i, m, c) for h, i, m, c in audit()}
         print('Wait ...')
         time.sleep(5)
 
