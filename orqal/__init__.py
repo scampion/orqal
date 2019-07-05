@@ -5,12 +5,12 @@ import os
 import time
 import requests
 
-__version__ = '0.0.4'
 ORQAL_API_URL = os.environ.get("ORQAL_API_URL", "http://localhost:5001/api")
 
 logging.getLogger("requests").setLevel(logging.WARNING)
 log = logging.getLogger('orqal')
 log.setLevel(logging.DEBUG)
+
 
 def services():
     try:
@@ -88,7 +88,6 @@ class Job:
         self._id = r.content.decode('utf8')
         assert self._id, "Cannot create job"
         self.load()
-
 
     def __str__(self):
         return "Job <%s | %s | %s | %s>" % (self._id, self.app, self.input, self.current_status)

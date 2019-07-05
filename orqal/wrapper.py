@@ -1,8 +1,6 @@
-import json
-import logging
-import conf
+from . import conf
 import os, sys
-from abstract import AbstractWrapper
+from .abstract import AbstractWrapper
 
 ########################################################################################################################
 

@@ -83,7 +83,7 @@ class Job(orqal.Job):
 
 def worker(j, d):
     log.info("Thread start : %s", j)
-    for name, obj in inspect.getmembers(sys.modules["wrapper"]):
+    for name, obj in inspect.getmembers(sys.modules["orqal.wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             log.info("Run %s %s", name, obj)
             try:
@@ -92,11 +92,11 @@ def worker(j, d):
                 traceback.print_exc(file=sys.stdout)
                 j.stderr.append(str(e))
                 j.status("error")
-    log.info("Thread stop : %s", j)
+    log.info("Thread stop : %s %s", j, j.cmd)
 
 
 def app_limit(j):
-    for name, obj in inspect.getmembers(sys.modules["wrapper"]):
+    for name, obj in inspect.getmembers(sys.modules["orqal.wrapper"]):
         if name != 'Job' and name == j.app and inspect.isclass(obj):
             nbthread = obj(j).threads if obj(j).threads else 1
             maxmemory = obj(j).memory_in_gb if obj(j).memory_in_gb else 10 ** 9

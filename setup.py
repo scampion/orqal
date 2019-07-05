@@ -2,8 +2,6 @@ from setuptools import setup, find_packages
 
 import orqal
 
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
 
 setup(
     name='orqal',
@@ -14,7 +12,8 @@ setup(
     description="Orchestration of Algorithm on docker cluster",
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
-    install_requires=requirements,
+    install_requires=['aiohttp', 'aiohttp-swagger', 'aiohttp-jinja2', 'aiohttp_utils',
+                      'pymongo==3.6.0', 'docker', 'mongolog', 'requests'],
     entry_points={
         'console_scripts': [
             'orqal-web = orqal.web:main',

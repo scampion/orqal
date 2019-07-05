@@ -35,6 +35,8 @@ class AbstractWrapper:
         self.job.host = client.api.base_url
         self.job.image = self.docker_url + ':' + tag
         self.job.cmd = cmd
+        self.job.save()
+        self.log.debug(cmd)
         name = "%s_%s" % (self.docker_url.split('/')[-1], self.job._id)
         self.job.run(docker['api'],
                      client.containers.run(self.docker_url + ':' + tag,
