@@ -118,7 +118,7 @@ def audit():
 def main():
     while True:
         ressources = {h: (i, m, c) for h, i, m, c in audit()}
-        for r in client.orqal.jobs.find({'current_status': None}):
+        for r in client.orqal.jobs.find({'current_status': None}).limit(500):
             id_ = r['_id']
             j = Job(id_)
             j.load()

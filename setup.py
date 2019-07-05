@@ -4,7 +4,7 @@ import orqal
 
 setup(
     name='orqal',
-    version='0.0.9',
+    version='0.0.10',
     packages=find_packages(),
     author="Sebastien Campion",
     author_email="sebastien.campion@inria.fr",
