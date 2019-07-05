@@ -1,11 +1,9 @@
 from setuptools import setup, find_packages
 
-import orqal
-
 
 setup(
     name='orqal',
-    version=orqal.__version__,
+    version='0.0.10',
     packages=find_packages(),
     author="Sebastien Campion",
     author_email="sebastien.campion@inria.fr",
