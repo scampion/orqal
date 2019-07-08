@@ -462,6 +462,7 @@ async def status(request):
                    for ip, d in dockers.items()},
          "containers": [c for c in containers()]
          }
+    s["_services"].remove("AbstractWrapper")
     return web.json_response(s)
 
 
