@@ -31,7 +31,7 @@ class AbstractWrapper:
         client.images.pull(self.docker_url, tag, auth_config=conf.registry_auth_config)
         mem_limit = int(self.memory_in_gb * 10 ** 9 if self.memory_in_gb else client.info()['MemTotal'])
         cpu_count = self.threads if self.threads else client.info()['NCPU']
-        cmd = self.get_cmd(self.job.params.get('app', None))
+        cmd = self.get_cmd(self.job.params)
         self.job.host = client.api.base_url
         self.job.image = self.docker_url + ':' + tag
         self.job.cmd = cmd
