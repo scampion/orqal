@@ -1,12 +1,12 @@
-from . import conf
+from orqal import conf
 import os, sys
-from .abstract import AbstractWrapper
+from orqal.abstract import AbstractWrapper
 
 ########################################################################################################################
 
 class Rabin2(AbstractWrapper):
-    docker_url = "madlab:5000/radare2"
-    volumes = {'/database': {'bind': '/database', 'mode': 'ro'}}
+    docker_url = "radare/radare2"
+    volumes = {'/tmp': {'bind': '/tmp', 'mode': 'ro'}}
     threads = 1
     memory_in_gb = 1
 

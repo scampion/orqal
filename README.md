@@ -149,6 +149,15 @@ Process use a mongo logging handler, in order to provide it in the web interface
     db.log.createIndex( { "time": 1 }, { expireAfterSeconds: 86400 } )
 
 
+Cache : 
+
+    use orqal
+    db.jobs.createIndex( { input: 1 } )
+    db.jobs.createIndex( { params: 1 } )
+    db.jobs.createIndex( { app: 1 } )
+
+
+
 ## Distribution
 
 ```	

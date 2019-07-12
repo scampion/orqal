@@ -2,12 +2,13 @@ import os
 from pymongo import MongoClient
 
 mongourl = os.getenv("ORQAL_MONGO_URI", 'mongodb://localhost/')
+print(mongourl)
 mongo = MongoClient(mongourl)
 
 mconf = {'mongourl': 'mongodb://mongo/',
-           'mongo_replicaset': "myreplicaset",
+           'mongo_replicaset': None,
            'docker_hosts': ['nodeA', 'nodeB'],
-           'docker_api_version': '1.37',
+           'docker_api_version': '1.40',
            'registry_auth_config': {'username': 'test',
                                     'password': '65sX2-9sSXSp-hs-XeZ8'},
            'jobs_dir': "/scratch/jobs",

@@ -92,7 +92,7 @@ def worker(j, d):
                 traceback.print_exc(file=sys.stdout)
                 j.stderr.append(str(e))
                 j.status("error")
-    log.info("Thread stop : %s %s", j, j.cmd)
+    log.info("Thread stop : %s %s", j, j.__dict__)
 
 
 def app_limit(j):

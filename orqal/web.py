@@ -31,6 +31,17 @@ log = logging.getLogger('app')
 log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 
 
+def in_cache(data):
+    if 'use_cache' in data.keys() and data['use_cache'] == False:
+        log.debug('No cache for job %s', data)
+        return
+    else:
+        r = mongo.orqal.jobs.find_one({'app': data['app'], 'params': data['params'], 'input': data['input']})
+        log.debug('Test cache for job %s : result %s : query : %s', data, r, {'app': data['app'], 'params': data['params'], 'input': data['input']})
+        if r:
+            return r['_id']
+
+
 # HTML
 ########################################################################################################################
 @routes.get('/')
@@ -134,10 +145,12 @@ async def job_post(request):
     data = await request.json()
     if data is None:
         web.Response(status=500)
-    del data['_id']
-    data['ctime'] = datetime.datetime.now()
-    log.debug("post job from %s for %s", request.transport.get_extra_info('peername'), data)
-    _id = mongo.orqal.jobs.insert(data)
+    _id = in_cache(data)
+    if not _id:
+        del data['_id']
+        data['ctime'] = datetime.datetime.now()
+        log.debug("post job from %s for %s", request.transport.get_extra_info('peername'), data)
+        _id = mongo.orqal.jobs.insert(data)
     return web.Response(text=str(_id))
 
 
@@ -201,7 +214,6 @@ async def download_job_file(request):
 
 
 @routes.post('/api/batch')
-@routes.post('/api/batch/{id}')
 async def batch_post(request):
     """
     ---
@@ -220,7 +232,6 @@ async def batch_post(request):
         "200":
           description: response another http stream with object id bson encoded on 12 bytes when job is inserted
     """
-    batch_id = request.match_info.get('id', None)
     jobs = []
     resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
     await resp.prepare(request)
@@ -229,15 +240,15 @@ async def batch_post(request):
         buffer = buffer + data
         if complete:
             data = json.loads(buffer.decode('utf-8'))
-            del data['_id']
-            data['ctime'] = datetime.datetime.now()
-            _id = mongo.orqal.jobs.insert(data)
+            _id = in_cache(data)
+            if not _id:
+                del data['_id']
+                data['ctime'] = datetime.datetime.now()
+                _id = mongo.orqal.jobs.insert(data)
             jobs.append(_id)
             await resp.write(_id.binary)
             log.debug("batch %s %s %s", _id, data['input'], data['app'])
             buffer = b''
-    if batch_id:
-        mongo.orqal.batch.update({'_id': batch_id}, {'$set': {'jobs': jobs}}, upsert=True)
     return resp
 
 
@@ -480,8 +491,9 @@ setup_swagger(app,
               api_version="1.0",
               contact=conf.contact)
 
+
 def main():
-    web.run_app(app, port=5001)
+    web.run_app(app, port=5005)
 
 
 if __name__ == '__main__':
