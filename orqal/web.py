@@ -440,7 +440,6 @@ async def status(request):
     produces:
     - application/json
     """
-    import wrapper
     def containers():
         for d in dockers.values():
             yield {
