@@ -51,7 +51,7 @@ def in_cache(data):
         for key, value in get_query_field(data['params']):
             query[".".join(["params", key])] = value
         r = mongo.orqal.jobs.find_one(query)
-        log.debug('Test cache for job %s : result %s : query : %s', data, r, {'app': data['app'], 'params': data['params'], 'input': data['input']})
+        log.debug('Test cache for job %s : result %s : query : %s', data, r, query)
         if r:
             return r['_id']
 
