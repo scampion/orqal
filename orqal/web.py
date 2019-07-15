@@ -30,13 +30,26 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('app')
 log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 
+def get_query_field(d):
+    query = []
+    for k, v in d.items():
+        if type(v) == dict:
+            for q in get_query_field(v):
+                query.append((".".join([k, q[0]]), q[1]))
+        else:
+            query.append((k, v))
+    return query
+
 
 def in_cache(data):
     if 'use_cache' in data.keys() and data['use_cache'] == False:
         log.debug('No cache for job %s', data)
         return
     else:
-        r = mongo.orqal.jobs.find_one({'app': data['app'], 'params': data['params'], 'input': data['input']})
+        query = {'app': data, 'input': data['input']}
+        for param in get_query_field(data['params']):
+            query[".".join(["params", param[0]])] = param[1]
+        r = mongo.orqal.jobs.find_one(query)
         log.debug('Test cache for job %s : result %s : query : %s', data, r, {'app': data['app'], 'params': data['params'], 'input': data['input']})
         if r:
             return r['_id']
