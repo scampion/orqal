@@ -1,6 +1,6 @@
 import json
 import logging
-import conf
+import orqal.conf as conf
 import os
 
 class AbstractWrapper:

@@ -1,28 +1,27 @@
 import collections
-import concurrent
-import datetime
-import inspect
-import json
-import logging
 import math
-import os
-import pymongo
-import shutil
 import sys
 
 import aiohttp_jinja2 as aiohttp_jinja2
+import concurrent
+import datetime
 import docker
+import inspect
 import jinja2
+import json
+import logging
+import os
+import pymongo
+import shutil
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
 from bson import ObjectId
 from bson.json_util import dumps
 from mongolog.handlers import MongoHandler
-from pymongo import MongoClient, DESCENDING
+from pymongo import DESCENDING
 
 from orqal import conf
-
-mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset)
+from orqal.worker import mongo, jobs
 
 routes = web.RouteTableDef()
 
@@ -68,8 +67,8 @@ async def html_jobs_status(request):
         page = 1
     else:
         page = int(page)
-    nbpages = math.ceil(mongo.orqal.jobs.count({'current_status': mongostatus}) / conf.nb_disp_jobs)
-    jobs = list(mongo.orqal.jobs.find({'current_status': mongostatus}).skip((page - 1) * conf.nb_disp_jobs).limit(
+    nbpages = math.ceil(jobs.count({'current_status': mongostatus}) / conf.nb_disp_jobs)
+    jobs = list(jobs.find({'current_status': mongostatus}).skip((page - 1) * conf.nb_disp_jobs).limit(
         conf.nb_disp_jobs).sort("ctime", DESCENDING))
     headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
     logs = [[j.get(key, '') for key in headers] for j in jobs]
@@ -107,7 +106,7 @@ async def job_get(request):
             description: a job in dictionary format
     """
     id = request.match_info.get('id')
-    data = mongo.orqal.jobs.find_one({'_id': ObjectId(id)})
+    data = jobs.find_one({'_id': ObjectId(id)})
     if len(data) == 0:
         web.Response(status=404)
     else:
@@ -150,7 +149,7 @@ async def job_post(request):
         del data['_id']
         data['ctime'] = datetime.datetime.now()
         log.debug("post job from %s for %s", request.transport.get_extra_info('peername'), data)
-        _id = mongo.orqal.jobs.insert(data)
+        _id = jobs.insert(data)
     return web.Response(text=str(_id))
 
 
@@ -244,7 +243,7 @@ async def batch_post(request):
             if not _id:
                 del data['_id']
                 data['ctime'] = datetime.datetime.now()
-                _id = mongo.orqal.jobs.insert(data)
+                _id = jobs.insert(data)
             jobs.append(_id)
             await resp.write(_id.binary)
             log.debug("batch %s %s %s", _id, data['input'], data['app'])
@@ -414,16 +413,16 @@ async def clean(request):
 
     action = request.match_info.get('action')
     if action == 'all':
-        mongo.orqal.jobs.delete_many({})
+        jobs.delete_many({})
         return web.Response(text='all jobs purged', status=200)
     elif action == 'scheduled':
-        mongo.orqal.jobs.delete_many({'current_status': {'$ne': 'exited'}})
+        jobs.delete_many({'current_status': {'$ne': 'exited'}})
         return web.Response(text='all jobs scheduled purged', status=200)
     elif action == 'old':
         resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
         await resp.prepare(request)
         for d in os.listdir(conf.jobs_dir):
-            if not mongo.orqal.jobs.find_one({'_id': d}):
+            if not jobs.find_one({'_id': d}):
                 log.debug("delete dir %s", d)
                 shutil.rmtree(os.path.join(conf.jobs_dir, d))
                 await resp.write(bytes("%s\n" % d, "utf8"))

@@ -1,20 +1,23 @@
+import sys
+import time
+from collections import OrderedDict
+
+import docker
 import inspect
 import logging
 import os
-import sys
 import threading
-import time
 import traceback
+from mongolog.handlers import MongoHandler
+from pymongo import MongoClient
 from random import randrange
 
-import docker
-import orqal
-from orqal import conf, wrapper
-from mongolog.handlers import MongoHandler
+import orqal.wrapper
+from orqal import conf
 
-from pymongo import MongoClient
+mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset, document_class=OrderedDict)
+jobs = mongo.orqal.jobs
 
-client = MongoClient(conf.mongourl)
 
 dockers = {h: {'docker': docker.DockerClient(base_url=h, version=conf.docker_api_version),
                'api': docker.APIClient(base_url=h, version=conf.docker_api_version)}
@@ -70,14 +73,14 @@ class Job(orqal.Job):
     def save(self):
         d = self.__dict__.copy()
         del d['container']
-        client.orqal.jobs.replace_one({'_id': self._id}, d)
+        mongo.orqal.jobs.replace_one({'_id': self._id}, d)
 
     def set_result(self, data):
         self.result = data
         self.save()
 
     def load(self):
-        data = client.orqal.jobs.find_one({'_id': self._id})
+        data = mongo.orqal.jobs.find_one({'_id': self._id})
         self.__dict__.update(data)
 
 
@@ -117,7 +120,7 @@ def audit():
 def main():
     while True:
         ressources = {h: (i, m, c) for h, i, m, c in audit()}
-        for r in client.orqal.jobs.find({'current_status': None}).limit(500):
+        for r in mongo.orqal.jobs.find({'current_status': None}).limit(500):
             id_ = r['_id']
             j = Job(id_)
             j.load()
