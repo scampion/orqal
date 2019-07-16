@@ -254,7 +254,6 @@ async def batch_post(request):
         "200":
           description: response another http stream with object id bson encoded on 12 bytes when job is inserted
     """
-    jobs = []
     resp = web.StreamResponse(status=200, reason='OK', headers={'Content-Type': 'text/plain'})
     await resp.prepare(request)
     buffer = b''
@@ -266,8 +265,8 @@ async def batch_post(request):
             if not _id:
                 del data['_id']
                 data['ctime'] = datetime.datetime.now()
+                data['params'] = collections.OrderedDict(sorted(data['params'].items()))
                 _id = jobs.insert(data)
-            jobs.append(_id)
             await resp.write(_id.binary)
             log.debug("batch %s %s %s", _id, data['input'], data['app'])
             buffer = b''
