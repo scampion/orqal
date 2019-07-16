@@ -59,7 +59,11 @@ NB: In a production mode, use gunicorn, in orqal dir :
     gunicorn3 web:app --bind 0.0.0.0:5001 --worker-class aiohttp.GunicornWebWorker --workers 8 --timeout 120
 user
 
+### Tips for MacOs Docker users
 
+Open the docker port using socat :
+
+    socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
     
 
 ## Configuration 
