@@ -30,6 +30,17 @@ log = logging.getLogger('app')
 log.addHandler(MongoHandler.to(db='orqal', collection='log'))
 
 
+def get_query_field(d):
+    query = []
+    for k, v in d.items():
+        if type(v) == dict:
+            for q in get_query_field(v):
+                query.append((".".join([k, q[0]]), q[1]))
+        else:
+            query.append((k, v))
+    return query
+
+
 def in_cache(data):
     if 'use_cache' in data.keys() and data['use_cache'] == False:
         log.debug('No cache for job %s', data)
@@ -78,13 +89,22 @@ async def html_jobs_status(request):
 
 
 @routes.get('/logs/{process}')
+@routes.get('/logs/{process}/{page}')
 @aiohttp_jinja2.template('logs.html')
 async def html_logs(request):
     process = request.match_info.get('process')
-    logs = list(mongo.orqal.log.find({'module': process}).sort([("time", pymongo.DESCENDING)]))
+    page = request.match_info.get('page')
+    if page is None:
+        page = 1
+    else:
+        page = int(page)
+    nbpages = math.ceil(mongo.orqal.log.count(
+        {'module': process}) / conf.nb_disp_logs)
+    logs = list(mongo.orqal.log.find({'module': process}).skip(
+        (page - 1) * conf.nb_disp_logs).limit(conf.nb_disp_logs).sort([("time", pymongo.DESCENDING)]))
     headers = ['levelname', 'time', 'message']
     logs = [[j.get(key, '') for key in headers] for j in logs]
-    return {'process': process, 'logs': logs}
+    return {'process': process, 'logs': logs, 'nbpages': nbpages, 'currentpage': page}
 
 
 # API

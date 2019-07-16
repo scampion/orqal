@@ -13,6 +13,7 @@ mconf = {'mongourl': 'mongodb://mongo/',
                                     'password': '65sX2-9sSXSp-hs-XeZ8'},
            'jobs_dir': "/scratch/jobs",
            'nb_disp_jobs': 30,
+           'nb_disp_logs': 30,
            'contact': "orqal@example.com",
            'services': "~/services.py", 
            'active': True
