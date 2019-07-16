@@ -35,7 +35,9 @@ def in_cache(data):
         log.debug('No cache for job %s', data)
         return
     else:
-        r = mongo.orqal.jobs.find_one({'app': data['app'], 'params': data['params'], 'input': data['input']})
+        params = data['params'] = collections.OrderedDict(sorted(data['params'].items()))
+        r = jobs.find_one({'app': data['app'], 'params': params, 'input': data['input']},
+                          sort=[("$natural", -1)])
         log.debug('Test cache for job %s : result %s : query : %s', data, r, {'app': data['app'], 'params': data['params'], 'input': data['input']})
         if r:
             return r['_id']
@@ -148,6 +150,7 @@ async def job_post(request):
     if not _id:
         del data['_id']
         data['ctime'] = datetime.datetime.now()
+        data['params'] = collections.OrderedDict(sorted(data['params'].items()))
         log.debug("post job from %s for %s", request.transport.get_extra_info('peername'), data)
         _id = jobs.insert(data)
     return web.Response(text=str(_id))
@@ -175,8 +178,8 @@ async def jobs_status(request):
                     type: integer
                     description: The number of job in this job.
     """
-    status_list = mongo.orqal.jobs.find().distinct('current_status')
-    status = {s: mongo.orqal.jobs.find({'current_status': s}).count() for s in status_list}
+    status_list = jobs.find().distinct('current_status')
+    status = {s: jobs.find({'current_status': s}).count() for s in status_list}
     status['todo'] = status.pop(None) if None in status.keys() else 0
     return web.json_response(status, headers={'Access-Control-Allow-Origin': "*"})
 
