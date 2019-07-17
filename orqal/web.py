@@ -81,10 +81,10 @@ async def html_jobs_status(request):
     else:
         page = int(page)
     nbpages = math.ceil(jobs.count({'current_status': mongostatus}) / conf.nb_disp_jobs)
-    jobs = list(jobs.find({'current_status': mongostatus}).skip((page - 1) * conf.nb_disp_jobs).limit(
+    jobs_list = list(jobs.find({'current_status': mongostatus}).skip((page - 1) * conf.nb_disp_jobs).limit(
         conf.nb_disp_jobs).sort("ctime", DESCENDING))
     headers = ['_id', 'ctime', 'current_status', 'host', 'container_id', 'image', 'input', 'wd']
-    logs = [[j.get(key, '') for key in headers] for j in jobs]
+    logs = [[j.get(key, '') for key in headers] for j in jobs_list]
     return {'status': status, 'headers': headers, 'logs': logs, 'nbpages': nbpages, 'currentpage': page}
 
 
