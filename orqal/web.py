@@ -464,6 +464,18 @@ async def clean(request):
         return web.Response(text='action in path needed', status=500)
 
 
+@routes.get('/api/sync', allow_head=False)
+async def sync(request):
+    """
+    ---
+    summary:  Synchronise cluster container state and db in case of inconsistency
+    produces:
+    - application/json
+    """
+    from orqal.sync import sync
+    sync()
+    web.Response(text='done', status=500)
+
 @routes.get('/api/status', allow_head=False)
 async def status(request):
     """
