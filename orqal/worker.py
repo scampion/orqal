@@ -14,7 +14,6 @@ from random import randrange
 
 import orqal.wrapper
 from orqal import conf
-from orqal.sync import SyncThread
 
 mongo = MongoClient(conf.mongourl, replicaSet=conf.mongo_replicaset, document_class=OrderedDict)
 jobs = mongo.orqal.jobs
@@ -150,5 +149,6 @@ def main():
 
 
 if __name__ == '__main__':
+    from orqal.sync import SyncThread
     SyncThread().start()
     main()

@@ -474,7 +474,7 @@ async def sync(request):
     """
     from orqal.sync import sync
     sync()
-    web.Response(text='done', status=500)
+    return web.Response(text='done', status=200)
 
 @routes.get('/api/status', allow_head=False)
 async def status(request):
