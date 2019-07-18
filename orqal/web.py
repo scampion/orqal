@@ -484,6 +484,7 @@ async def status(request):
     produces:
     - application/json
     """
+    import orqal.wrapper
     def containers():
         for d in dockers.values():
             yield {
@@ -498,7 +499,7 @@ async def status(request):
     s = {"_id": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
          "_doc": __doc__,
          "status": status,
-         "_services": [name for name, obj in inspect.getmembers(sys.modules["wrapper"]) if inspect.isclass(obj)],
+         "_services": [name for name, obj in inspect.getmembers(sys.modules["orqal.wrapper"]) if inspect.isclass(obj)],
          "hosts": conf.docker_hosts,
          "nodes": {ip: {"info": d['docker'].info(),
                         "containers": [d['api'].inspect_container(c) for c in d['api'].containers()]}
